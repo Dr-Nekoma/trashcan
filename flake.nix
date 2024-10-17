@@ -28,6 +28,8 @@
 
           modules = [
             (import ./modules/qemu.nix)
+            (import ./modules/misc.nix {pkgs = pkgs; })
+            (import ./modules/erlang.nix {pkgs = pkgs; })
             (import ./modules/postgres.nix { pkgs = pkgs; })
           ];
         };
