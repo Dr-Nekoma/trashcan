@@ -1,0 +1,9 @@
+* Chumbucket
+
+** Running
+
+#+begin_src shell
+  nix develop --impure
+  # followed by
+  nix run
+#+end_src

@@ -35,7 +35,7 @@
         };
 
         program = imageName: pkgs.writeShellScript "run-vm.sh" ''
-          export IMAGE_NAME=$"{imageName}.qcow2"
+          export IMAGE_NAME="${imageName}.qcow2"
           export NIX_DISK_IMAGE=$(mktemp -u -t $IMAGE_NAME)
 
           trap "rm -f $NIX_DISK_IMAGE" EXIT
