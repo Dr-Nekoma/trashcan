@@ -1,6 +1,8 @@
 { pkgs, ... }:
 
 {
+  documentation.enable = false;
+
   # Networking
   networking.firewall.allowedTCPPorts = [ 22 80 443 ];
   services.openssh.enable = true;

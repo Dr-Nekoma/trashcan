@@ -56,7 +56,7 @@
         packages = {
           # Remote NixOS AWS VM
           nixosConfigurations = {
-            kanagawa = nixpkgs.lib.nixosSystem {
+            nekoma = nixpkgs.lib.nixosSystem {
               system = "x86_64-linux";
               modules = [
                 ./configuration.nix
@@ -98,6 +98,7 @@
                   scripts = {
                     build.exec = "just build";
                     run.exec = "just run";
+                    deploy.exec = "just deploy";
                   };
 
                   # looks for the .env by default additionaly, there is .filename
