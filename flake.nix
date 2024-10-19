@@ -27,7 +27,10 @@
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        pkgs = nixpkgs.legacyPackages."${system}";
+        pkgs = import nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+        };
 
         machine = nixpkgs.lib.nixosSystem {
           system = builtins.replaceStrings [ "darwin" ] [ "linux" ] system;
@@ -100,6 +103,10 @@
                     bash
                     just
                   ];
+
+                  languages.terraform = {
+                    enable = true;
+                  };
 
                   scripts = {
                     build.exec = "just build";
