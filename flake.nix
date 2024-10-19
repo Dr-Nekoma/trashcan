@@ -7,6 +7,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    agenix.url = "github:ryantm/agenix";
+
     devenv = {
       url = "github:cachix/devenv";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -20,6 +22,7 @@
       self,
       nixpkgs,
       flake-utils,
+      agenix,
       devenv,
       disko,
       ...
@@ -42,6 +45,8 @@
             ./modules/extras.nix
             ./modules/postgres.nix
             ./modules/users.nix
+            ./modules/secrets.nix
+            agenix.nixosModules.default
           ];
 
           specialArgs = {
@@ -65,6 +70,22 @@
         packages = {
           # Remote NixOS AWS VM
           nixosConfigurations = {
+            # This config is used when in the Terraform provisioning, so
+            # it contains the bare minimum for us to log in there with ssh
+            bootstrap = nixpkgs.lib.nixosSystem {
+              system = "x86_64-linux";
+              modules = [
+                ./configuration.nix
+                ./modules/extras.nix
+                ./modules/users.nix
+              ];
+              specialArgs = {
+                inherit pkgs;
+              };
+            };
+
+            # After provisioning the infra with Terraform, we start to deploy
+            # this configuration here.
             nekoma = nixpkgs.lib.nixosSystem {
               system = "x86_64-linux";
               modules = [
@@ -74,9 +95,11 @@
                 ./modules/extras.nix
                 ./modules/postgres.nix
                 ./modules/users.nix
+                ./modules/secrets.nix
+                agenix.nixosModules.default
               ];
               specialArgs = {
-                inherit pkgs;
+                inherit pkgs agenix;
               };
             };
           };

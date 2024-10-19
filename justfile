@@ -3,8 +3,10 @@ set export := true
 
 target_region := env_var_or_default("TARGET_REGION", "us-east-1")
 target_vm := env_var_or_default("TARGET_VM", "nekoma")
+target_vm_bootstap := env_var_or_default("TARGET_VM_BOOTSTRAP", "bootstrap")
 target_host := env_var_or_default("TARGET_HOST", "localhost")
 target_flake := ".#nixosConfigurations." + target_vm
+target_flake_bootstrap := ".#nixosConfigurations." + target_vm_bootstap
 
 modules := justfile_directory() + "/module"
 release := `git tag -l --sort=-creatordate | head -n 1`
@@ -26,9 +28,21 @@ build:
 deploy:
     @./deploy.sh --target-flake {{ target_flake }} --target-host {{ target_host }}
 
+# Loads the current Flake into a REPL
+repl:
+    nix repl {{target_flake}}
+
+# Runs a Qemu VM, to quickly test changes
+run:
+    nix run
+
+# ------------------
+# Terraform Commands
+# ------------------
+
 # Updates terraform variables
 update-vars:
-    @./generate-inputs.sh --flake ".#{{ target_vm }}" --region {{ target_region }}
+    @./generate-inputs.sh --flake ".#{{ target_vm_bootstap }}" --region {{ target_region }}
 
 # Runs `terraform plan`
 plan:
@@ -40,12 +54,4 @@ apply:
 
 # Destroys Terraform infra
 destroy:
-    terraform apply -destroy -var "flake=.#{{target_vm}}" -var "region={{target_region}}"
-
-# Loads the current Flake into a REPL
-repl:
-    nix repl {{target_flake}}
-
-# Runs a Qemu VM, to quickly test changes
-run:
-    nix run
+    terraform apply -destroy -var-file="inputs.tfvars"

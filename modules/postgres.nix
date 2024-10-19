@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, config, ... }:
 
 {
   environment.systemPackages = with pkgs; [
@@ -23,9 +23,7 @@
       periods
       repmgr
     ];
-    initialScript = pkgs.writeText "init-sql-script" ''
-      CREATE EXTENSION pg_stat_statements;
-    '';
+    initialScript = config.age."init.sql".path;
   };
 
   # haproxy
