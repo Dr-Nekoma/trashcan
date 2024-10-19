@@ -2,6 +2,11 @@
   inputs = {
     flake-utils.url = "github:numtide/flake-utils/v1.0.0";
 
+    disko = {
+      url = "github:nix-community/disko/latest";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     devenv = {
       url = "github:cachix/devenv";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -16,6 +21,7 @@
       nixpkgs,
       flake-utils,
       devenv,
+      disko,
       ...
     }@inputs:
     flake-utils.lib.eachDefaultSystem (
