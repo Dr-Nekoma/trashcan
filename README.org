@@ -1,6 +1,8 @@
-* Chumbucket
+* Trashcan
 
-** Running
+#+html: <a href="https://builtwithnix.org"><img alt="built with nix" src="https://builtwithnix.org/badge.svg" /></a><br>
+
+** Running Locally (With Qemu)
 
 #+begin_src shell
   nix develop --impure
@@ -8,4 +10,22 @@
   run
   # connect to postgres
   sudo --user postgres psql
+#+end_src
+
+** Provisioning with Terraform
+
+#+begin_src shell
+  just update-vars
+  just plan
+  just apply
+  # if you need to nuke the infra as well
+  just destroy
+#+end_src
+
+** Deploying with Nix
+
+#+begin_src shell
+  just deploy
+  # or
+  deploy
 #+end_src

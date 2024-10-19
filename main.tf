@@ -9,11 +9,6 @@ terraform {
   }
 }
 
-variable "ami" {
-  type = string
-  nullable = false
-}
-
 variable "ami_version" {
   type = string
   default = "24.05"
@@ -89,7 +84,7 @@ data "aws_ami" "nixos_ami" {
 
   filter {
     name   = "name"
-    values = ["nixos/24.05*"]
+    values = ["nixos/${var.ami_version}*"]
   }
 
   owners = ["427812963091"]
@@ -141,4 +136,12 @@ module "nixos" {
 
 output "public_dns" {
   value = aws_instance.vm.public_dns
+}
+
+resource "local_file" "output" {
+  content = jsonencode({
+    public_dns = aws_instance.vm.public_dns
+    public_ip = aws_instance.vm.public_ip
+  })
+  filename = "${path.module}/output.json"
 }

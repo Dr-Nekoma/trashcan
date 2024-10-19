@@ -89,6 +89,7 @@ terraform.rc
 # Ignore Terraform state as well
 id_ed25519*
 tfplan
+output.json
 
 # Nix
 result
