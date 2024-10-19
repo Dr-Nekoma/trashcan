@@ -3,36 +3,6 @@
 {
   services.getty.autologinUser = "root";
 
-  #virtualisation = {
-  #  forwardPorts = [
-  #    {
-  #      from = "host";
-  #      guest.port = 80;
-  #      host.port = 8080;
-  #    }
-  #  ];
-  #};
-
-  # Networking
-  networking.firewall.allowedTCPPorts = [ 80 22 ];
-  services.openssh.enable = true;
-
-  # Nix configuration
-  nix.settings.trusted-users = ["@wheel"];
-  nix = {
-    package = pkgs.nixVersions.stable;
-    extraOptions = ''
-      experimental-features = nix-command flakes
-    '';
-    # Clean up /nix/store/ after a week
-    gc = {
-      automatic = true;
-      dates = "weekly UTC";
-      options = "--delete-older-than 7d";
-    };
-  };
-
-  # Users
   users.users = {
     benevides = {
       isNormalUser = true;
@@ -62,6 +32,4 @@
       ];
     };
   };
-
-  system.stateVersion = "24.05";
 }

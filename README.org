@@ -5,5 +5,7 @@
 #+begin_src shell
   nix develop --impure
   # followed by
-  nix run
+  run
+  # connect to postgres
+  sudo --user postgres psql
 #+end_src

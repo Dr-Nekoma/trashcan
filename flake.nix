@@ -27,26 +27,50 @@
           system = builtins.replaceStrings [ "darwin" ] [ "linux" ] system;
 
           modules = [
-            (import ./modules/qemu.nix)
-            (import ./modules/misc.nix {pkgs = pkgs; })
-            (import ./modules/erlang.nix {pkgs = pkgs; })
-            (import ./modules/postgres.nix { pkgs = pkgs; })
+            ./modules/qemu.nix
+            ./modules/caddy.nix
+            ./modules/erlang.nix
+            ./modules/extras.nix
+            ./modules/postgres.nix
+            ./modules/users.nix
           ];
+
+          specialArgs = {
+            inherit pkgs;
+          };
         };
 
-        program = imageName: pkgs.writeShellScript "run-vm.sh" ''
-          export IMAGE_NAME="${imageName}.qcow2"
-          export NIX_DISK_IMAGE=$(mktemp -u -t $IMAGE_NAME)
+        program =
+          imageName:
+          pkgs.writeShellScript "run-vm.sh" ''
+            export IMAGE_NAME="${imageName}.qcow2"
+            export NIX_DISK_IMAGE=$(mktemp -u -t $IMAGE_NAME)
 
-          trap "rm -f $NIX_DISK_IMAGE" EXIT
+            trap "rm -f $NIX_DISK_IMAGE" EXIT
 
-          ${machine.config.system.build.vm}/bin/run-nixos-vm
-        '';
+            ${machine.config.system.build.vm}/bin/run-nixos-vm
+          '';
       in
       {
         # nix build
         packages = {
-          inherit machine;
+          # Remote NixOS AWS VM
+          nixosConfigurations = {
+            kanagawa = nixpkgs.lib.nixosSystem {
+              system = "x86_64-linux";
+              modules = [
+                ./configuration.nix
+                ./modules/caddy.nix
+                ./modules/erlang.nix
+                ./modules/extras.nix
+                ./modules/postgres.nix
+                ./modules/users.nix
+              ];
+              specialArgs = {
+                inherit pkgs;
+              };
+            };
+          };
         };
 
         # nix run
@@ -70,6 +94,11 @@
                     bash
                     just
                   ];
+
+                  scripts = {
+                    build.exec = "just build";
+                    run.exec = "just run";
+                  };
 
                   # looks for the .env by default additionaly, there is .filename
                   # if an arbitrary file is desired

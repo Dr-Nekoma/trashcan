@@ -8,6 +8,10 @@
   virtualisation = {
     graphics = false;
 
+    forwardPorts = [
+      { from = "host"; guest.port = 80; host.port = 8080; }
+    ];
+
     host = {
       inherit pkgs;
     };
