@@ -26,9 +26,13 @@ build:
 deploy:
     @./deploy.sh --target-flake {{ target_flake }} --target-host {{ target_host }}
 
+# Updates terraform variables
+update-vars:
+    @./generate-inputs.sh --flake ".#{{ target_vm }}" --region {{ target_region }}
+
 # Runs `terraform plan`
 plan:
-    terraform plan -var "flake=.#{{target_vm}}" -var "region={{target_region}}" -out tfplan
+    terraform plan -var-file="inputs.tfvars" -out tfplan
 
 # Runs `terraform apply`
 apply:
