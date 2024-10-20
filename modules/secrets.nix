@@ -7,8 +7,8 @@
         mode = "0440";
       };
 
-      "init.sql" = {
-        file = ../secrets/init.sql.age;
+      init_sql = {
+        file = ../secrets/init_sql.age;
         group = "wheel";
         mode = "0440";
       };

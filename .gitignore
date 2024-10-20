@@ -92,5 +92,6 @@ tfplan
 output.json
 
 # Nix
+.env*
 result
 *.qcow2

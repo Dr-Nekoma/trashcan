@@ -4,8 +4,7 @@ set export := true
 target_region := env_var_or_default("TARGET_REGION", "us-east-1")
 target_vm := env_var_or_default("TARGET_VM", "nekoma")
 target_vm_bootstap := env_var_or_default("TARGET_VM_BOOTSTRAP", "bootstrap")
-target_host := env_var_or_default("TARGET_HOST", "localhost")
-target_flake := ".#nixosConfigurations." + target_vm
+target_flake := ".#" + target_vm
 target_flake_bootstrap := ".#nixosConfigurations." + target_vm_bootstap
 
 modules := justfile_directory() + "/module"
@@ -26,7 +25,7 @@ build:
 
 # Deploys the VM to EC2
 deploy:
-    @./deploy.sh --target-flake {{ target_flake }} --target-host {{ target_host }}
+    @./deploy.sh --target-flake {{ target_flake }}
 
 # Loads the current Flake into a REPL
 repl:

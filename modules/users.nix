@@ -2,6 +2,7 @@
 
 {
   services.getty.autologinUser = "root";
+  security.sudo.wheelNeedsPassword = false;
 
   users.users = {
     deploy = {

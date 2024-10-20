@@ -22,12 +22,21 @@ while [[ "$#" -gt 0 ]]; do
     esac
 done
 
-if [[ -z "$TARGET_FLAKE" || -z "$TARGET_HOST" ]]; then
+if [[ -z "$TARGET_FLAKE" ]]; then
     echo "Usage: $0 --target-flake <flake> --target-host <host>"
     exit 1
 fi
 
+if [[ -z "$TARGET_HOST" ]]; then
+    if [[ -f ./output.json ]]; then
+        TARGET_HOST=$(cat output.json | jq --raw-output '.public_dns')
+    else
+        echo "Usage: $0 --target-flake <flake> --target-host <host>"
+        exit 1
+    fi
+fi
+
 nix run nixpkgs#nixos-rebuild switch -- \
     --flake "$TARGET_FLAKE" \
-    --target-host "$TARGET_HOST" \
+    --target-host "deploy@$TARGET_HOST" \
     --fast --use-remote-sudo

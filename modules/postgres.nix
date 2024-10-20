@@ -23,7 +23,7 @@
       periods
       repmgr
     ];
-    initialScript = config.age."init.sql".path;
+    initialScript = config.age.secrets.init_sql.path;
   };
 
   # haproxy
