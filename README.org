@@ -23,6 +23,8 @@
 #+end_src
 
 ** Deploying with Nix
+After provisioning the infrastructure, you won't need Terraform anymore, all
+deploys can be done in pure Nix.
 
 #+begin_src shell
   just deploy
