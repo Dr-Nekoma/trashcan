@@ -3,7 +3,6 @@
 {
   environment.systemPackages = with pkgs; [
     barman
-    pgbouncer
   ];
 
   # Postgres
@@ -23,7 +22,27 @@
       periods
       repmgr
     ];
-    initialScript = config.age.secrets.init_sql.path;
+    initialScript = pkgs.writeText "init-sql-script" ''
+      CREATE EXTENSION pg_stat_statements;
+
+      CREATE USER admin SUPERUSER;
+      GRANT ALL PRIVILEGES ON DATABASE mmo to admin;
+    '';
+  };
+
+  # PG Bouncer
+  services.pgbouncer = {
+    enable = true;
+    databases = {
+      mmo = "host=localhost port=5432 dbname=mmo auth_user=admin";
+    };
+    extraConfig = ''
+      min_pool_size=5
+      reserve_pool_size=5
+      max_client_conn=400
+    '';
+    listenAddress = "*";
+    listenPort = 6432;
   };
 
   # haproxy

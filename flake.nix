@@ -45,8 +45,6 @@
             ./modules/extras.nix
             ./modules/postgres.nix
             ./modules/users.nix
-            ./modules/secrets.nix
-            agenix.nixosModules.default
           ];
 
           specialArgs = {
@@ -95,8 +93,6 @@
                 ./modules/extras.nix
                 ./modules/postgres.nix
                 ./modules/users.nix
-                ./modules/secrets.nix
-                agenix.nixosModules.default
               ];
               specialArgs = {
                 inherit pkgs agenix;
