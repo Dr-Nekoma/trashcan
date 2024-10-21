@@ -22,7 +22,16 @@
   just destroy
 #+end_src
 
+After the initial terraform deploy, make sure to get the new key generated at
+~id_ed25519.pub~ and place it under the ~server~ value in ~./secrets/secrets.nix~.
+
+Then run:
+#+begin_src shell
+  just rekey
+#+end_src
+
 ** Deploying with Nix
+
 After provisioning the infrastructure, you won't need Terraform anymore, all
 deploys can be done in pure Nix.
 

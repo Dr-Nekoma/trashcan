@@ -22,12 +22,7 @@
       periods
       repmgr
     ];
-    initialScript = pkgs.writeText "init-sql-script" ''
-      CREATE EXTENSION pg_stat_statements;
-
-      CREATE USER admin SUPERUSER;
-      GRANT ALL PRIVILEGES ON DATABASE mmo to admin;
-    '';
+    initialScript = config.age.secrets.init_sql.file;
   };
 
   # PG Bouncer

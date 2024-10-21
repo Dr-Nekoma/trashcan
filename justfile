@@ -35,6 +35,13 @@ repl:
 run:
     nix run
 
+# ----------------
+# Agenix Commands
+# ----------------
+# Updates agenix keys
+rekey:
+    cd secrets && nix run github:ryantm/agenix -- -r
+
 # ------------------
 # Terraform Commands
 # ------------------
