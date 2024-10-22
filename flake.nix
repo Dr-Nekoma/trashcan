@@ -32,7 +32,6 @@
       let
         pkgs = import nixpkgs {
           inherit system;
-          #overlays = [ (import ./overlay.nix) ];
           config.allowUnfree = true;
         };
 
