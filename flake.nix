@@ -32,6 +32,7 @@
       let
         pkgs = import nixpkgs {
           inherit system;
+          overlays = [ self.overlays.default ];
           config.allowUnfree = true;
         };
 
@@ -40,7 +41,6 @@
 
           modules = [
             agenix.nixosModules.default
-            ./overlays
             ./modules/qemu.nix
             ./modules/caddy.nix
             ./modules/erlang.nix
@@ -68,6 +68,8 @@
       {
         # nix build
         packages = {
+          overlays.default = import ./overlays;
+
           # Remote NixOS AWS VM
           nixosConfigurations = {
             # This config is used when in the Terraform provisioning, so
