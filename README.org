@@ -1,4 +1,4 @@
-* 🗑️ Trashcan
+* Trashcan 🗑️
 
 #+html: <a href="https://builtwithnix.org"><img alt="built with nix" src="https://builtwithnix.org/badge.svg" /></a><br>
 
@@ -22,10 +22,7 @@
   just destroy
 #+end_src
 
-After the initial terraform deploy, make sure to get the new key generated at
-~id_ed25519.pub~ and place it under the ~server~ value in ~./secrets/secrets.nix~.
-
-Then run:
+After the initial terraform deploy, make sure to run:
 #+begin_src shell
   just rekey
 #+end_src

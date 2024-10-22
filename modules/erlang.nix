@@ -1,7 +1,7 @@
 { pkgs, ... }:
 {
   environment.systemPackages = with pkgs; [
-    erlang
+    erlang_27
     rebar3
   ];
 

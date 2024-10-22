@@ -21,7 +21,7 @@ default:
 
 # Builds the remote AWS EC2 VM
 build:
-    nix build {{target_flake}}.config.system.build.toplevel
+    nix build ".#nixosConfigurations.{{target_vm}}.config.system.build.toplevel"
 
 # Deploys the VM to EC2
 deploy:
