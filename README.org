@@ -1,4 +1,4 @@
-* Trashcan
+* 🗑️ Trashcan
 
 #+html: <a href="https://builtwithnix.org"><img alt="built with nix" src="https://builtwithnix.org/badge.svg" /></a><br>
 
