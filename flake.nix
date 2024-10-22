@@ -40,6 +40,7 @@
 
           modules = [
             agenix.nixosModules.default
+            ./overlays
             ./modules/qemu.nix
             ./modules/caddy.nix
             ./modules/erlang.nix
@@ -89,6 +90,7 @@
               system = "x86_64-linux";
               modules = [
                 agenix.nixosModules.default
+                ./overlays
                 ./configuration.nix
                 ./modules/caddy.nix
                 ./modules/erlang.nix
