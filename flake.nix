@@ -32,7 +32,7 @@
       let
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [ self.overlays.default ];
+          #overlays = [ (import ./overlay.nix) ];
           config.allowUnfree = true;
         };
 
@@ -68,8 +68,6 @@
       {
         # nix build
         packages = {
-          overlays.default = import ./overlays;
-
           # Remote NixOS AWS VM
           nixosConfigurations = {
             # This config is used when in the Terraform provisioning, so
@@ -92,7 +90,6 @@
               system = "x86_64-linux";
               modules = [
                 agenix.nixosModules.default
-                ./overlays
                 ./configuration.nix
                 ./modules/caddy.nix
                 ./modules/erlang.nix
