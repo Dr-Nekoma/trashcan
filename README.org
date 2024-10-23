@@ -2,7 +2,14 @@
 
 #+html: <a href="https://builtwithnix.org"><img alt="built with nix" src="https://builtwithnix.org/badge.svg" /></a><br>
 
-** Running Locally (With Qemu)
+This repository contains the server configuration to host our applications,
+currently we deploy the following projects here:
+
++ [[https://github.com/Dr-Nekoma/lyceum][Lyceum]]
+
+** Developmennt
+
+*** Running Locally (With Qemu)
 
 #+begin_src shell
   nix develop --impure
@@ -12,7 +19,9 @@
   sudo --user postgres psql
 #+end_src
 
-** Provisioning with Terraform
+** Deployment
+
+*** Provisioning with Terraform
 
 #+begin_src shell
   just update-vars
@@ -27,7 +36,7 @@ After the initial terraform deploy, make sure to run:
   just rekey
 #+end_src
 
-** Deploying with Nix
+*** Deploying with Nix
 
 After provisioning the infrastructure, you won't need Terraform anymore, all
 deploys can be done in pure Nix.
@@ -37,3 +46,8 @@ deploys can be done in pure Nix.
   # or
   deploy
 #+end_src
+
+* Acknowledgements
+
++ The Terraform-based bootstrap is a modification from the great setup found in the
+  [[https://github.com/Gabriella439/nixos-in-production][NixOS in Production]] book.
