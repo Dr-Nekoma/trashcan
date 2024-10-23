@@ -34,6 +34,10 @@ provider "aws" {
   region  = var.region
 }
 
+locals {
+  availability_zone = "${var.region}c"
+}
+
 # -----------
 # Networking
 # -----------
@@ -54,8 +58,9 @@ resource "aws_internet_gateway" "gw" {
 
 # Subnet
 resource "aws_subnet" "subnet" {
-  vpc_id     = aws_vpc.vpc.id
-  cidr_block = "10.0.0.0/24"
+  vpc_id            = aws_vpc.vpc.id
+  cidr_block        = "10.0.0.0/24"
+  availability_zone = local.availability_zone
 
   # This makes it a public subnet
   map_public_ip_on_launch = true
@@ -183,7 +188,8 @@ resource "aws_instance" "vm" {
   instance_type = "t3.micro"
 
   root_block_device {
-    volume_size = 64
+    volume_size = 80
+    volume_type = "gp3"
   }
 
   user_data = <<-EOF
