@@ -9,6 +9,9 @@
   services.postgresql = {
     enable = true;
     package = pkgs.postgresql_16;
+    ensureDatabases = [
+      "mmo"
+    ];
     settings = {
       shared_preload_libraries = "pg_stat_statements";
       # pg_stat_statements config, nested attr sets need to be
