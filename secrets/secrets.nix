@@ -1,7 +1,7 @@
 let
   # TODO: change the server's key once Lemos does a new deploy
   systems = {
-    server = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDDCR+pRcFoKqYwew+vJcsLESSXPf1FdRbHi/O4KOGrR
+    server = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIaMoMt5GubcrF6fEsMSSS0v6XtrH1BqLdO8+b7a6qlV
 ";
   };
   users = {

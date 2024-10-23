@@ -5,6 +5,7 @@
 
   # Networking
   networking.firewall.allowedTCPPorts = [ 22 80 443 ];
+  networking.hostName = "trashcan";
 
   services.fail2ban = {
     enable = true;

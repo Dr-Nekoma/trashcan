@@ -37,3 +37,8 @@ deploys can be done in pure Nix.
   # or
   deploy
 #+end_src
+
+* Acknowledgements
+
++ The Terraform-based bootstrap is a modification from the great setup found in the
+  [[https://github.com/Gabriella439/nixos-in-production][NixOS in Production]] book.
