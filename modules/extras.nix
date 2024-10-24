@@ -46,6 +46,8 @@
       PermitRootLogin = "prohibit-password";
     };
   };
+  # Magueta wants this
+  programs.mosh.enable = true;
 
   # Extra stuff
   programs.neovim = {
