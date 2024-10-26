@@ -68,7 +68,7 @@
   # Add passsword after pg starts
   # https://discourse.nixos.org/t/assign-password-to-postgres-user-declaratively/9726/3
   systemd.services.postgresql.postStart = let
-    password_file_path = config.age.secrets.pg_master_password.path;
+    password_file_path = config.age.secrets.pg_mp.path;
   in ''
     $PSQL -tA <<'EOF'
       DO $$
