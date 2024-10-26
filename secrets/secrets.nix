@@ -14,4 +14,5 @@ let
 in
 {
   "pg_mp.age".publicKeys = everyone;
+  "pgb_af.age".publicKeys = everyone;
 }

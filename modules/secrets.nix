@@ -12,6 +12,13 @@
         group = "postgres";
         mode = "0440";
       };
+
+      pgb_af = {
+        file = ../secrets/pgb_af.age;
+        owner = "pgbouncer";
+        group = "pgbouncer";
+        mode = "0440";
+      };
     };
   };
 }

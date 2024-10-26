@@ -41,19 +41,26 @@
   };
 
   # PG Bouncer
-  services.pgbouncer = {
-    enable = true;
-    databases = {
-      mmo = "host=localhost port=5432 dbname=lyceum auth_user=lyceum";
+  services.pgbouncer = 
+    let
+      pgb_af_file_path = config.age.secrets.pgb_af.path;
+    in
+    {
+      enable = true;
+      poolMode = "transaction";
+      defaultPoolSize = 50;
+      listenAddress = "*";
+      listenPort = 6432;
+      authFile = pgb_af_file_path;
+      databases = {
+        lyceum = "host=localhost port=5432 dbname=lyceum user=lyceum";
+      };
+      extraConfig = ''
+        min_pool_size=5
+        max_client_conn=400
+        reserve_pool_size=5
+      '';
     };
-    extraConfig = ''
-      min_pool_size=5
-      reserve_pool_size=5
-      max_client_conn=400
-    '';
-    listenAddress = "*";
-    listenPort = 6432;
-  };
 
   # haproxy
   #services.haproxy = {
@@ -67,9 +74,10 @@
 
   # Add passsword after pg starts
   # https://discourse.nixos.org/t/assign-password-to-postgres-user-declaratively/9726/3
-  systemd.services.postgresql.postStart = let
-    password_file_path = config.age.secrets.pg_mp.path;
-  in ''
+  systemd.services.postgresql.postStart = 
+    let
+      password_file_path = config.age.secrets.pg_mp.path;
+    in ''
     $PSQL -tA <<'EOF'
       DO $$
       DECLARE password TEXT;
