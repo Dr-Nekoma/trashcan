@@ -41,9 +41,9 @@
           modules = [
             agenix.nixosModules.default
             ./modules/qemu.nix
-            ./modules/caddy.nix
             ./modules/erlang.nix
             ./modules/extras.nix
+            ./modules/nginx.nix
             ./modules/postgres.nix
             ./modules/users.nix
           ];
@@ -90,9 +90,9 @@
               modules = [
                 agenix.nixosModules.default
                 ./configuration.nix
-                ./modules/caddy.nix
                 ./modules/erlang.nix
                 ./modules/extras.nix
+                ./modules/nginx.nix
                 ./modules/postgres.nix
                 ./modules/users.nix
                 ./modules/secrets.nix
