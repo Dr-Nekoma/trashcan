@@ -10,7 +10,17 @@
     enable = true;
     package = pkgs.postgresql_16;
     ensureDatabases = [
-      "mmo"
+      "lyceum"
+    ];
+    ensureUsers = [
+      {
+        name = "lyceum";
+        ensureDBOwnership = true;
+        ensureClauses = {
+          login = true;
+          createrole = true;
+        };
+      }
     ];
     settings = {
       shared_preload_libraries = "pg_stat_statements";
@@ -25,14 +35,16 @@
       periods
       repmgr
     ];
-    initialScript = config.age.secrets.init_sql.file;
+    initialScript = pkgs.writeText "init-sql-script" ''
+      CREATE EXTENSION pg_stat_statements;
+    '';
   };
 
   # PG Bouncer
   services.pgbouncer = {
     enable = true;
     databases = {
-      mmo = "host=localhost port=5432 dbname=mmo auth_user=admin";
+      mmo = "host=localhost port=5432 dbname=lyceum auth_user=lyceum";
     };
     extraConfig = ''
       min_pool_size=5
@@ -52,4 +64,19 @@
   services.keepalived = {
     enable = true;
   };
+
+  # Add passsword after pg starts
+  # https://discourse.nixos.org/t/assign-password-to-postgres-user-declaratively/9726/3
+  systemd.services.postgresql.postStart = let
+    password_file_path = config.age.secrets.pg_mp.path;
+  in ''
+    $PSQL -tA <<'EOF'
+      DO $$
+      DECLARE password TEXT;
+      BEGIN
+        password := trim(both from replace(pg_read_file('${password_file_path}'), E'\n', '''));
+        EXECUTE format('ALTER USER lyceum WITH PASSWORD '''%s''';', password);
+      END $$;
+    EOF
+  '';
 }
