@@ -11,14 +11,14 @@
     recommendedProxySettings = true;
     #recommendedTlsSettings = true;
 
-    virtualHosts.localhost = {
-      locations."/" = {
-        return = "200 '<html><body>It works</body></html>'";
-        extraConfig = ''
-          default_type text/html;
-        '';
-      };
+    streamConfig = ''
+      server {
+          listen 8080;
+          proxy_pass localhost:8080;
+      }
+    '';
 
+    virtualHosts.localhost = {
       locations."/robots.txt" = {
         extraConfig = ''
           rewrite ^/(.*)  $1;
