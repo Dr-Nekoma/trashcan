@@ -11,11 +11,14 @@
     recommendedProxySettings = true;
     #recommendedTlsSettings = true;
 
-    virtualHosts.localhost = {
-      locations."/" = {
-        proxyPass = "http://127.0.0.1:8080";
-      };
+    streamConfig = ''
+      server {
+          listen 8080;
+          proxy_pass localhost:8080;
+      }
+    '';
 
+    virtualHosts.localhost = {
       locations."/robots.txt" = {
         extraConfig = ''
           rewrite ^/(.*)  $1;
