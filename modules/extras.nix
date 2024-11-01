@@ -3,6 +3,20 @@
 {
   documentation.enable = false;
 
+  environment.systemPackages = with pkgs; [
+    lsof
+    docker-compose
+  ];
+
+  virtualisation.docker = {
+    enable = true;
+    autoPrune = {
+      dates = "weekly";
+      enable = true;
+      flags = [ "--all" ];
+    };
+  };
+
   # Networking
   networking.firewall.allowedTCPPorts = [ 22 80 443 ];
   networking.hostName = "trashcan";
