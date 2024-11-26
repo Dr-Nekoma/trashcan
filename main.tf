@@ -1,136 +1,101 @@
+# ----------
+# Variables
+# ----------
+variable "api_key" {
+  type     = string
+  nullable = false
+}
+
+variable "prefix" {
+  type    = string
+  default = "trashcan"
+}
+
+variable "region" {
+  type    = string
+  default = "br-se1"
+}
+
+variable "flake" {
+  type    = string
+  default = "bootstrap"
+}
+
+variable "vm_type" {
+  type    = string
+  default = "BV2-8-40"
+}
+
+# ---------
+# Provider
+# ---------
 terraform {
-  required_version = ">= 1.8.3"
+  backend "local" {
+    path = ".terraform.tfstate"
+  }
 
   required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.72"
+    mgc = {
+      source = "registry.terraform.io/magalucloud/mgc"
     }
   }
 }
 
-variable "ami_version" {
-  type    = string
-  default = "24.05"
-}
-
-variable "vm_private_ip" {
-  type    = string
-  default = "10.0.0.12"
-}
-
-variable "region" {
-  type     = string
-  nullable = false
-}
-
-variable "flake" {
-  type     = string
-  nullable = false
-}
-
-provider "aws" {
-  profile = "nekoma"
+provider "mgc" {
+  alias   = "se"
   region  = var.region
-}
-
-locals {
-  availability_zone = "${var.region}c"
+  api_key = var.api_key
 }
 
 # -----------
 # Networking
 # -----------
-# VPC
-resource "aws_vpc" "vpc" {
-  cidr_block = "10.0.0.0/16"
+# TODO: Add VPC
+#resource "mgc_network_vpc" "vpc" {
+#  provider    = mgc.se
+#  name        = "${var.prefix}-vpc"
+#  description = "${var.prefix}-vpc"
+#}
 
-  tags = {
-    Category = "network"
-    Project  = "trashcan"
-  }
+resource "mgc_network_security_groups" "sg" {
+  name        = "${var.prefix}-${var.region}-sg"
+  description = "Security Group"
 }
 
-# Gateway
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.vpc.id
+resource "mgc_network_security_groups_rules" "allow_ingress_ssh" {
+  depends_on        = [mgc_network_security_groups.sg]
+  description       = "Allow Ingress SSH"
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  port_range_min    = 22
+  port_range_max    = 22
+  protocol          = "tcp"
+  remote_ip_prefix  = "0.0.0.0/0"
+  security_group_id = mgc_network_security_groups.sg.id
 }
 
-# Subnet
-resource "aws_subnet" "subnet" {
-  vpc_id            = aws_vpc.vpc.id
-  cidr_block        = "10.0.0.0/24"
-  availability_zone = local.availability_zone
-
-  # This makes it a public subnet
-  map_public_ip_on_launch = true
-  depends_on              = [aws_internet_gateway.gw]
-
-  tags = {
-    Category = "network"
-    Project  = "trashcan"
-  }
+resource "mgc_network_security_groups_rules" "allow_ingress_http" {
+  depends_on        = [mgc_network_security_groups.sg]
+  description       = "Allow Ingress HTTP"
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  port_range_min    = 80
+  port_range_max    = 80
+  protocol          = "tcp"
+  remote_ip_prefix  = "0.0.0.0/0"
+  security_group_id = mgc_network_security_groups.sg.id
 }
 
-# Create Route Table
-resource "aws_route_table" "rt" {
-  vpc_id = aws_vpc.vpc.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.gw.id
-  }
-
-  tags = {
-    Category = "network"
-    Project  = "trashcan"
-  }
-}
-
-# Associate Route Table with Subnet
-resource "aws_route_table_association" "rta" {
-  subnet_id      = aws_subnet.subnet.id
-  route_table_id = aws_route_table.rt.id
-}
-
-# Security Group
-resource "aws_security_group" "sg" {
-  vpc_id = aws_vpc.vpc.id
-
-  # The "nixos" Terraform module requires SSH access to the machine to deploy
-  # our desired NixOS configuration.
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Category = "network"
-    Project  = "trashcan"
-  }
+resource "mgc_network_security_groups_rules" "allow_egress_http" {
+  depends_on        = [mgc_network_security_groups.sg]
+  description       = "Allow Egress HTTP"
+  direction         = "egress"
+  ethertype         = "IPv4"
+  port_range_min    = 80
+  port_range_max    = 80
+  protocol          = "tcp"
+  remote_ip_prefix  = "0.0.0.0/0"
+  security_group_id = mgc_network_security_groups.sg.id
 }
 
 # -----
@@ -140,8 +105,8 @@ resource "tls_private_key" "ssh_key" {
   algorithm = "ED25519"
 }
 
-# Synchronize the SSH private key to a local file that the "nixos" module can
-# use
+# Synchronize the SSH private key to a local file that
+# the "nixos" module can use it.
 resource "local_sensitive_file" "ssh_private_key" {
   filename = "${path.module}/id_ed25519"
   content  = tls_private_key.ssh_key.private_key_openssh
@@ -152,72 +117,65 @@ resource "local_file" "ssh_public_key" {
   content  = tls_private_key.ssh_key.public_key_openssh
 }
 
-resource "aws_key_pair" "ssh_key" {
-  public_key = tls_private_key.ssh_key.public_key_openssh
+resource "mgc_ssh_keys" "ssh_key" {
+  provider = mgc.se
+  name     = "${var.prefix}-ssh"
+  key      = tls_private_key.ssh_key.public_key_openssh
 }
 
-# ------------
-# EC2 Instance
-# ------------
-data "aws_ami" "nixos_ami" {
-  most_recent = true
-
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
-
-  filter {
-    name   = "name"
-    values = ["nixos/${var.ami_version}*"]
-  }
-
-  owners = ["427812963091"]
-}
-
-resource "aws_instance" "vm" {
-  ami                         = data.aws_ami.nixos_ami.id
-  subnet_id                   = aws_subnet.subnet.id
-  vpc_security_group_ids      = [aws_security_group.sg.id]
-  key_name                    = aws_key_pair.ssh_key.key_name
-  private_ip                  = var.vm_private_ip
-  associate_public_ip_address = false
-
-  # We could use a smaller instance size, but at the time of this writing the
-  # t3.micro instance type is available for 750 hours under the AWS free tier.
-  instance_type = "t3.micro"
-
-  root_block_device {
-    volume_size = 80
-    volume_type = "gp3"
-  }
-
-  user_data = <<-EOF
-    #!/bin/sh
-    (umask 377; echo '${tls_private_key.ssh_key.private_key_openssh}' > /var/lib/id_ed25519)
-    EOF
-
-  tags = {
-    Category = "vm"
-    Project  = "trashcan"
+# ---------------------
+# VM Instace + Volumes
+# ---------------------
+resource "mgc_block_storage_volumes" "volume" {
+  name = "${var.prefix}-volume"
+  size = 80
+  type = {
+    name = "cloud_nvme"
   }
 }
 
-# ----------
-# Static IP
-# ----------
-resource "aws_eip" "eip" {
-  domain                    = "vpc"
-  instance                  = aws_instance.vm.id
-  associate_with_private_ip = var.vm_private_ip
-  depends_on                = [aws_internet_gateway.gw]
+resource "mgc_virtual_machine_instances" "vm" {
+  provider = mgc.se
+  name     = var.prefix
+
+  machine_type = {
+    name = var.vm_type
+  }
+
+  image = {
+    name = "cloud-debian-12 LTS"
+  }
+
+  network = {
+    associate_public_ip = true
+
+    #vpc = {
+    #  id = mgc_network_vpc.vpc.network_id
+    #}
+
+    interface = {
+      security_groups = [{
+        id = mgc_network_security_groups.sg.id
+      }]
+    }
+  }
+
+  user_data = filebase64("${path.module}/templates/user_data.sh")
+
+  ssh_key_name = mgc_ssh_keys.ssh_key.name
+}
+
+# Attaching the VM with Block Storage
+resource "mgc_block_storage_volume_attachment" "va" {
+  block_storage_id   = mgc_block_storage_volumes.volume.id
+  virtual_machine_id = mgc_virtual_machine_instances.vm.id
 }
 
 # This ensures that the instance is reachable via `ssh` before we deploy NixOS
 resource "null_resource" "wait" {
   provisioner "remote-exec" {
     connection {
-      host        = aws_eip.eip.public_ip
+      host        = mgc_virtual_machine_instances.vm.network.public_address
       private_key = tls_private_key.ssh_key.private_key_openssh
     }
 
@@ -225,20 +183,25 @@ resource "null_resource" "wait" {
   }
 }
 
-module "nixos" {
-  source      = "github.com/Gabriella439/terraform-nixos-ng//nixos?ref=af1a0af57287851f957be2b524fcdc008a21d9ae"
-  host        = "root@${aws_eip.eip.public_ip}"
-  flake       = var.flake
-  arguments   = []
-  ssh_options = "-o StrictHostKeyChecking=accept-new -i ${local_sensitive_file.ssh_private_key.filename}"
-  depends_on  = [null_resource.wait]
+# -------------
+# Provisioning
+# -------------
+module "deploy" {
+  source                 = "github.com/nix-community/nixos-anywhere//terraform/all-in-one"
+  nixos_system_attr      = ".#nixosConfigurations.${var.flake}.config.system.build.toplevel"
+  nixos_partitioner_attr = ".#nixosConfigurations.${var.flake}.config.system.build.diskoScript"
+  debug_logging          = true
+
+  instance_id  = mgc_virtual_machine_instances.vm.id
+  target_host  = mgc_virtual_machine_instances.vm.network.public_address
+  install_user = "debian"
 }
 
 # -------
 # Outputs
 # -------
-output "public_dns" {
-  value = aws_eip.eip.public_dns
+output "public_ip" {
+  value = mgc_virtual_machine_instances.vm.network.public_address
 }
 
 resource "local_file" "nix_output" {
@@ -251,8 +214,7 @@ resource "local_file" "nix_output" {
 
 resource "local_file" "output" {
   content = jsonencode({
-    public_dns = aws_eip.eip.public_dns
-    public_ip  = aws_eip.eip.public_ip
+    public_ip = mgc_virtual_machine_instances.vm.network.public_address
   })
   filename = "${path.module}/output.json"
 }

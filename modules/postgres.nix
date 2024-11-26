@@ -55,11 +55,11 @@
       databases = {
         lyceum = "host=localhost port=5432 dbname=lyceum user=lyceum";
       };
-      extraConfig = ''
-        min_pool_size=5
-        max_client_conn=400
-        reserve_pool_size=5
-      '';
+      settings = {
+        min_pool_size=5;
+        max_client_conn=400;
+        reserve_pool_size=5;
+      };
     };
 
   # haproxy

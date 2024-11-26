@@ -13,13 +13,17 @@ replace := if os() == "linux" { "sed -i" } else { "sed -i '' -e" }
 
 # For lazy people
 alias r := run
+alias i := init
+alias p := plan
+alias a := apply
+alias d := destroy
 
 # Lists all availiable targets
 default:
     @echo "Setting TARGET_FLAKE={{ target_flake }}"
     just --list
 
-# Builds the remote AWS EC2 VM
+# Builds the remote VM
 build:
     nix build ".#nixosConfigurations.{{target_vm}}.config.system.build.toplevel"
 
@@ -33,7 +37,7 @@ repl:
 
 # Runs a Qemu VM, to quickly test changes
 run:
-    nix run
+    nix run .#nixosConfigurations.{{target_vm}}.config.system.build.vm
 
 # ----------------
 # Agenix Commands
@@ -43,21 +47,21 @@ rekey:
     cd secrets && nix run github:ryantm/agenix -- -r
 
 # ------------------
-# Terraform Commands
+# Tofu Commands
 # ------------------
 
-# Updates terraform variables
-update-vars:
-    @./generate-inputs.sh --flake ".#{{ target_vm_bootstap }}" --region {{ target_region }}
+# Runs `tofu init`
+init:
+    tofu init
 
-# Runs `terraform plan`
+# Runs `tofu plan`
 plan:
-    terraform plan -var-file="inputs.tfvars" -out tfplan
+    tofu plan -var-file="inputs.tfvars" -out tfplan
 
-# Runs `terraform apply`
+# Runs `tofu apply`
 apply:
-    terraform apply "tfplan"
+    tofu apply "tfplan"
 
-# Destroys Terraform infra
+# Destroys tofu infra
 destroy:
-    terraform apply -destroy -var-file="inputs.tfvars"
+    tofu apply -destroy -var-file="inputs.tfvars"

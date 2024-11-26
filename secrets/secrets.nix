@@ -1,6 +1,7 @@
 let
+  # TODO: change the server's key once Lemos does a new deploy
   systems = {
-    server = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMvsO5p2Dk04qOE4pmTfPe8v+WM1KCf0r+RvFsj1TJ8M";
+    server = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIfsPVvbOqMVHnuNMT/dSXNjfxEnGAXmoaXhXjfS2fr8";
   };
   users = {
     # PS: Benin's key is different than the SSH key he uses to login in the server, blame age + GPG
