@@ -8,7 +8,7 @@
   # Postgres
   services.postgresql = {
     enable = true;
-    package = pkgs.postgresql_16;
+    package = pkgs.postgresql_17;
     ensureDatabases = [
       "lyceum"
     ];
@@ -31,9 +31,9 @@
       "pg_stat_statements.max" = 10000;
       "pg_stat_statements.track" = "all";
     };
-    extraPlugins = with pkgs.postgresql_16.pkgs; [
+    extensions = with pkgs.postgresql_17.pkgs; [
       periods
-      repmgr
+      #repmgr
     ];
     initialScript = pkgs.writeText "init-sql-script" ''
       CREATE EXTENSION pg_stat_statements;
@@ -41,26 +41,26 @@
   };
 
   # PG Bouncer
-  services.pgbouncer = 
-    let
-      pgb_af_file_path = config.age.secrets.pgb_af.path;
-    in
-    {
-      enable = true;
-      poolMode = "transaction";
-      defaultPoolSize = 50;
-      listenAddress = "*";
-      listenPort = 6432;
-      authFile = pgb_af_file_path;
-      databases = {
-        lyceum = "host=localhost port=5432 dbname=lyceum user=lyceum";
-      };
-      settings = {
-        min_pool_size=5;
-        max_client_conn=400;
-        reserve_pool_size=5;
-      };
-    };
+  #services.pgbouncer = 
+  #  let
+  #    pgb_af_file_path = config.age.secrets.pgb_af.path;
+  #  in
+  #  {
+  #    enable = true;
+  #    settings = {
+  #      auth_file = pgb_af_file_path;
+  #      databases = {
+  #        lyceum = "host=localhost port=5432 dbname=lyceum user=lyceum";
+  #      };
+  #      default_pool_size = 50;
+  #      listen_addr = "*";
+  #      listen_port = 6432;
+  #      min_pool_size=5;
+  #      max_client_conn=400;
+  #      pool_mode = "transaction";
+  #      reserve_pool_size=5;
+  #    };
+  #  };
 
   # haproxy
   #services.haproxy = {

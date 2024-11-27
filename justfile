@@ -1,7 +1,6 @@
 set dotenv-load
 set export := true
 
-target_region := env_var_or_default("TARGET_REGION", "us-east-1")
 target_vm := env_var_or_default("TARGET_VM", "nekoma")
 target_vm_bootstap := env_var_or_default("TARGET_VM_BOOTSTRAP", "bootstrap")
 target_flake := ".#" + target_vm
@@ -16,6 +15,7 @@ alias r := run
 alias i := init
 alias p := plan
 alias a := apply
+alias an := apply-nixos
 alias d := destroy
 
 # Lists all availiable targets
@@ -56,10 +56,15 @@ init:
 
 # Runs `tofu plan`
 plan:
-    tofu plan -var-file="inputs.tfvars" -out tfplan
+    tofu plan -var-file="inputs.tfvars" -target="module.vm" -out tfplan
 
-# Runs `tofu apply`
+# Runs `tofu apply` to bootstrap the debian vm
 apply:
+    tofu apply "tfplan"
+
+# Runs `tofu apply` to install nixos
+apply-nixos:
+    tofu plan -var-file="inputs.tfvars" -out tfplan
     tofu apply "tfplan"
 
 # Destroys tofu infra
