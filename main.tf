@@ -5,8 +5,8 @@ terraform {
 }
 
 module "vm" {
-  source = "./tofu/debian"
-  api_key = var.api_key
+  source    = "./tofu/debian"
+  api_key   = var.api_key
   root_path = abspath(path.root)
 }
 
@@ -15,7 +15,7 @@ module "nixos" {
   nixos_system_attr      = ".#nixosConfigurations.${var.flake}.config.system.build.toplevel"
   nixos_partitioner_attr = ".#nixosConfigurations.${var.flake}.config.system.build.diskoScript"
   debug_logging          = true
-  #deployment_ssh_key = "${path.root}/"
+  deployment_ssh_key     = file("${path.root}/id_ed25519")
 
   instance_id  = module.vm.vm_id
   target_host  = module.vm.public_ip
