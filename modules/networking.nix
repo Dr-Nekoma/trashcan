@@ -29,7 +29,7 @@
       AllowUsers = [ "deploy" "benevides" "kanagawa" "lemos" "magueta" "marinho" ];
       X11Forwarding = false;
       # "yes", "without-password", "prohibit-password", "forced-commands-only", "no"
-      PermitRootLogin = "prohibit-password";
+      PermitRootLogin = "yes";
     };
   };
 }
