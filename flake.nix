@@ -2,11 +2,6 @@
   inputs = {
     flake-utils.url = "github:numtide/flake-utils/v1.0.0";
 
-    disko = {
-      url = "github:nix-community/disko/latest";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     agenix.url = "github:ryantm/agenix";
 
     devenv = {
@@ -14,7 +9,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nixpkgs.url = "github:NixOS/nixpkgs/24.05";
+    disko = {
+      url = "github:nix-community/disko/latest";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
 
   outputs =
@@ -35,6 +35,22 @@
           config.allowUnfree = true;
         };
 
+        # Modules
+        bootstrap = [
+          ./configuration.nix
+          ./modules/extras.nix
+          ./modules/networking.nix
+          ./modules/users.nix
+        ];
+
+        cloud = [
+          ./modules/erlang.nix
+          ./modules/nginx.nix
+          ./modules/postgres.nix
+          ./modules/secrets.nix
+        ] ++ bootstrap;
+
+        # Qemu Setup
         machine = nixpkgs.lib.nixosSystem {
           system = builtins.replaceStrings [ "darwin" ] [ "linux" ] system;
 
@@ -43,13 +59,13 @@
             ./modules/qemu.nix
             ./modules/erlang.nix
             ./modules/extras.nix
+            ./modules/networking.nix
             ./modules/nginx.nix
-            ./modules/postgres.nix
             ./modules/users.nix
           ];
 
           specialArgs = {
-            inherit pkgs;
+            inherit pkgs inputs;
           };
         };
 
@@ -67,19 +83,15 @@
       {
         # nix build
         packages = {
-          # Remote NixOS AWS VM
+          # Remote NixOS VM
           nixosConfigurations = {
             # This config is used when in the Terraform provisioning, so
             # it contains the bare minimum for us to log in there with ssh
             bootstrap = nixpkgs.lib.nixosSystem {
               system = "x86_64-linux";
-              modules = [
-                ./configuration.nix
-                ./modules/extras.nix
-                ./modules/users.nix
-              ];
+              modules = bootstrap ++ [ disko.nixosModules.disko ];
               specialArgs = {
-                inherit pkgs;
+                inherit pkgs inputs;
               };
             };
 
@@ -87,18 +99,12 @@
             # this configuration here.
             nekoma = nixpkgs.lib.nixosSystem {
               system = "x86_64-linux";
-              modules = [
+              modules = cloud ++ [
                 agenix.nixosModules.default
-                ./configuration.nix
-                ./modules/erlang.nix
-                ./modules/extras.nix
-                ./modules/nginx.nix
-                ./modules/postgres.nix
-                ./modules/users.nix
-                ./modules/secrets.nix
+                disko.nixosModules.disko
               ];
               specialArgs = {
-                inherit pkgs agenix;
+                inherit pkgs inputs;
               };
             };
           };
@@ -126,7 +132,7 @@
                     just
                   ];
 
-                  languages.terraform = {
+                  languages.opentofu = {
                     enable = true;
                   };
 

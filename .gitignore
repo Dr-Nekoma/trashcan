@@ -90,8 +90,12 @@ terraform.rc
 id_ed25519*
 tfplan
 output.json
+inputs.tfvars
 
 # Nix
 .env*
 result
 *.qcow2
+
+# Magalu CLI
+mgc_cli

@@ -51,3 +51,5 @@ deploys can be done in pure Nix.
 
 + The Terraform-based bootstrap is a modification from the great setup found in the
   [[https://github.com/Gabriella439/nixos-in-production][NixOS in Production]] book.
++ Many thanks to @Misterio77 for [[https://jaxy.discourse.group/t/criando-um-servidor-de-factorio-100-declarativo-com-nixos-e-terraform/48][figuring it out]] how to run this on Magalu cloud.
+  
