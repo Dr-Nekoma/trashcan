@@ -1,152 +1,151 @@
 {
   inputs = {
-    flake-utils.url = "github:numtide/flake-utils/v1.0.0";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
-    disko = {
-      url = "github:nix-community/disko/latest";
+    nixos-generators = {
+      url = "github:nix-community/nixos-generators";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    agenix.url = "github:ryantm/agenix";
 
     devenv = {
       url = "github:cachix/devenv";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nixpkgs.url = "github:NixOS/nixpkgs/24.05";
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    flake-parts = {
+      url = "github:hercules-ci/flake-parts";
+    };
+
+    treefmt-nix.url = "github:numtide/treefmt-nix";
   };
 
   outputs =
-    {
+    inputs@{
       self,
+      flake-parts,
       nixpkgs,
-      flake-utils,
-      agenix,
-      devenv,
       disko,
+      devenv,
+      nixos-generators,
+      treefmt-nix,
       ...
-    }@inputs:
-    flake-utils.lib.eachDefaultSystem (
-      system:
-      let
-        pkgs = import nixpkgs {
-          inherit system;
-          config.allowUnfree = true;
-        };
-
-        machine = nixpkgs.lib.nixosSystem {
-          system = builtins.replaceStrings [ "darwin" ] [ "linux" ] system;
-
-          modules = [
-            agenix.nixosModules.default
-            ./modules/qemu.nix
-            ./modules/erlang.nix
-            ./modules/extras.nix
-            ./modules/nginx.nix
-            ./modules/postgres.nix
-            ./modules/users.nix
-          ];
-
-          specialArgs = {
-            inherit pkgs;
+    }:
+    let
+      mainModules = [
+        inputs.disko.nixosModules.disko
+        ./configuration.nix
+      ];
+      bootstrapModules = [
+        ./modules/basic.nix
+        ./modules/users.nix
+      ];
+    in
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "aarch64-darwin"
+        "x86_64-darwin"
+      ];
+      perSystem =
+        { pkgs, system, ... }:
+        let
+          treefmtEval = treefmt-nix.lib.evalModule pkgs ./treefmt.nix;
+        in
+        {
+          # This sets `pkgs` to a nixpkgs with allowUnfree option set.
+          _module.args.pkgs = import nixpkgs {
+            inherit system;
+            config.allowUnfree = true;
           };
-        };
 
-        program =
-          imageName:
-          pkgs.writeShellScript "run-vm.sh" ''
-            export IMAGE_NAME="${imageName}.qcow2"
-            export NIX_DISK_IMAGE=$(mktemp -u -t $IMAGE_NAME)
-
-            trap "rm -f $NIX_DISK_IMAGE" EXIT
-
-            ${machine.config.system.build.vm}/bin/run-nixos-vm
-          '';
-      in
-      {
-        # nix build
-        packages = {
-          # Remote NixOS AWS VM
-          nixosConfigurations = {
-            # This config is used when in the Terraform provisioning, so
-            # it contains the bare minimum for us to log in there with ssh
-            bootstrap = nixpkgs.lib.nixosSystem {
+          # nix build
+          packages = {
+            iso = nixos-generators.nixosGenerate {
               system = "x86_64-linux";
-              modules = [
-                ./configuration.nix
-                ./modules/extras.nix
-                ./modules/users.nix
-              ];
+              modules = mainModules;
               specialArgs = {
-                inherit pkgs;
+                isImageTarget = true;
+                extraModules = bootstrapModules;
               };
+              format = "iso";
             };
 
-            # After provisioning the infra with Terraform, we start to deploy
-            # this configuration here.
-            nekoma = nixpkgs.lib.nixosSystem {
+            qcow = nixos-generators.nixosGenerate {
               system = "x86_64-linux";
-              modules = [
-                agenix.nixosModules.default
-                ./configuration.nix
-                ./modules/erlang.nix
-                ./modules/extras.nix
-                ./modules/nginx.nix
-                ./modules/postgres.nix
-                ./modules/users.nix
-                ./modules/secrets.nix
-              ];
+              modules = mainModules;
               specialArgs = {
-                inherit pkgs agenix;
+                isImageTarget = true;
+                extraModules = bootstrapModules;
               };
+              format = "qcow";
+            };
+          };
+
+          # nix run
+          apps = {
+            qemu = {
+              type = "app";
+
+              program = "${pkgs.writeShellScript "run-vm.sh" ''
+                export NIX_DISK_IMAGE=$(mktemp -u -t nixos.XXXXXX.qcow2)
+
+                trap "rm -f $NIX_DISK_IMAGE" EXIT
+
+                cp ${self.packages.x86_64-linux.qcow}/nixos.qcow2 $NIX_DISK_IMAGE
+                chmod u+w $NIX_DISK_IMAGE
+
+                ${pkgs.qemu}/bin/qemu-system-x86_64 \
+                  -drive file=$NIX_DISK_IMAGE,if=virtio \
+                  -m 2048 \
+                  -netdev user,id=net0,hostfwd=tcp::2222-:22 \
+                  -device virtio-net-pci,netdev=net0 \
+                  -enable-kvm
+              ''}";
+            };
+          };
+
+          # nix develop
+          devShells = {
+            # `nix develop --impure`
+            default = devenv.lib.mkShell {
+              inherit inputs pkgs;
+              modules = [
+                (
+                  { pkgs, lib, ... }:
+                  {
+                    packages = with pkgs; [
+                      bash
+                    ];
+
+                    languages.opentofu = {
+                      enable = true;
+                    };
+                  }
+                )
+              ];
+            };
+          };
+
+          # nix fmt
+          formatter = treefmtEval.config.build.wrapper;
+        };
+
+      flake = {
+        nixosConfigurations = {
+          bootstrap = nixpkgs.lib.nixosSystem {
+            modules = mainModules;
+            specialArgs = {
+              isImageTarget = false;
             };
           };
         };
+      };
 
-        # nix run
-        apps = {
-          default = {
-            type = "app";
-
-            program = builtins.toString (program "nixos");
-          };
-        };
-
-        devShells = {
-          # `nix develop --impure`
-          default = devenv.lib.mkShell {
-            inherit inputs pkgs;
-            modules = [
-              (
-                { pkgs, lib, ... }:
-                {
-                  packages = with pkgs; [
-                    bash
-                    just
-                  ];
-
-                  languages.terraform = {
-                    enable = true;
-                  };
-
-                  scripts = {
-                    build.exec = "just build";
-                    run.exec = "just run";
-                    deploy.exec = "just deploy";
-                  };
-
-                  # looks for the .env by default additionaly, there is .filename
-                  # if an arbitrary file is desired
-                  dotenv.enable = true;
-                }
-              )
-            ];
-          };
-        };
-
-        # nix fmt
-        formatter = pkgs.nixfmt-rfc-style;
-      }
-    );
+    };
 }

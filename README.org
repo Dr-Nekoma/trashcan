@@ -1,6 +1,7 @@
 * Trashcan 🗑️
 
 #+html: <a href="https://builtwithnix.org"><img alt="built with nix" src="https://builtwithnix.org/badge.svg" /></a><br>
+#+html: <a href="https://github.com/Dr-Nekoma/trashcan/actions/workflows/qemu_build.yml"><img alt="[QEMU] Build" src="https://github.com/Dr-Nekoma/trashcan/actions/workflows/qemu_build.yml/badge.svg" /></a>
 
 This repository contains the server configuration to host our applications,
 currently we deploy the following projects here:
@@ -9,14 +10,31 @@ currently we deploy the following projects here:
 
 ** Developmennt
 
-*** Running Locally (With Qemu)
+Enter the Nix shell via the cli, or leverage direnv:
 
 #+begin_src shell
+  # Nix CLI
   nix develop --impure
-  # followed by
-  run
-  # connect to postgres
+  # direnv
+  direnv allow
+#+end_src
+
+*** Qemu VM
+
+#+begin_src shell
+  nix build .#qcow
+  # Followed by
+  nix run .#qemu
+  # Now connect to postgres
   sudo --user postgres psql
+#+end_src
+
+*** Custom ISO 
+
+You can also build an ~.iso~ to test with different tools.
+
+#+begin_src shell
+  nix build .#iso
 #+end_src
 
 ** Deployment

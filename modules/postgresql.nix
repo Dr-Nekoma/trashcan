@@ -8,7 +8,7 @@
   # Postgres
   services.postgresql = {
     enable = true;
-    package = pkgs.postgresql_16;
+    package = pkgs.postgresql_17;
     ensureDatabases = [
       "lyceum"
     ];
@@ -31,7 +31,8 @@
       "pg_stat_statements.max" = 10000;
       "pg_stat_statements.track" = "all";
     };
-    extraPlugins = with pkgs.postgresql_16.pkgs; [
+    extraPlugins = with pkgs.postgresql_17.pkgs; [
+      omnigres
       periods
       repmgr
     ];
@@ -41,26 +42,26 @@
   };
 
   # PG Bouncer
-  services.pgbouncer = 
-    let
-      pgb_af_file_path = config.age.secrets.pgb_af.path;
-    in
-    {
-      enable = true;
-      poolMode = "transaction";
-      defaultPoolSize = 50;
-      listenAddress = "*";
-      listenPort = 6432;
-      authFile = pgb_af_file_path;
-      databases = {
-        lyceum = "host=localhost port=5432 dbname=lyceum user=lyceum";
-      };
-      extraConfig = ''
-        min_pool_size=5
-        max_client_conn=400
-        reserve_pool_size=5
-      '';
-    };
+  # services.pgbouncer =
+  #   let
+  #     pgb_af_file_path = config.age.secrets.pgb_af.path;
+  #   in
+  #   {
+  #     enable = true;
+  #     poolMode = "transaction";
+  #     defaultPoolSize = 50;
+  #     listenAddress = "*";
+  #     listenPort = 6432;
+  #     authFile = pgb_af_file_path;
+  #     databases = {
+  #       lyceum = "host=localhost port=5432 dbname=lyceum user=lyceum";
+  #     };
+  #     extraConfig = ''
+  #       min_pool_size=5
+  #       max_client_conn=400
+  #       reserve_pool_size=5
+  #     '';
+  #   };
 
   # haproxy
   #services.haproxy = {
@@ -74,17 +75,17 @@
 
   # Add passsword after pg starts
   # https://discourse.nixos.org/t/assign-password-to-postgres-user-declaratively/9726/3
-  systemd.services.postgresql.postStart = 
-    let
-      password_file_path = config.age.secrets.pg_mp.path;
-    in ''
-    $PSQL -tA <<'EOF'
-      DO $$
-      DECLARE password TEXT;
-      BEGIN
-        password := trim(both from replace(pg_read_file('${password_file_path}'), E'\n', '''));
-        EXECUTE format('ALTER USER lyceum WITH PASSWORD '''%s''';', password);
-      END $$;
-    EOF
-  '';
+  # systemd.services.postgresql.postStart =
+  #   let
+  #     password_file_path = config.age.secrets.pg_mp.path;
+  #   in ''
+  #   $PSQL -tA <<'EOF'
+  #     DO $$
+  #     DECLARE password TEXT;
+  #     BEGIN
+  #       password := trim(both from replace(pg_read_file('${password_file_path}'), E'\n', '''));
+  #       EXECUTE format('ALTER USER lyceum WITH PASSWORD '''%s''';', password);
+  #     END $$;
+  #   EOF
+  # '';
 }
