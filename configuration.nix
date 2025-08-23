@@ -1,14 +1,14 @@
-{ modulesPath, ... }:
-
 {
-  imports = [ "${modulesPath}/virtualisation/amazon-image.nix" ];
-
-  zramSwap.enable = true;
-
-  swapDevices = [
-    {
-      device = "/swapfile";
-      size = 8 * 1024;
-    }
-  ];
+  lib,
+  isImageTarget,
+  extraModules,
+  ...
+}:
+{
+  imports =
+    lib.optionals (!isImageTarget) [
+      ./hardware-configuration.nix
+      ./disko-config.nix
+    ]
+    ++ extraModules;
 }

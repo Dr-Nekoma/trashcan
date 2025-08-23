@@ -5,37 +5,12 @@
 
   environment.systemPackages = with pkgs; [
     lsof
-    docker-compose
   ];
 
-  virtualisation.docker = {
-    enable = true;
-    autoPrune = {
-      dates = "weekly";
-      enable = true;
-      flags = [ "--all" ];
-    };
-  };
-
-  # Networking
-  networking.firewall.allowedTCPPorts = [ 22 80 443 ];
-  networking.hostName = "trashcan";
-
-  services.fail2ban = {
-    enable = true;
-    maxretry = 5;
-    bantime = "1h";
-    bantime-increment = {
-      multipliers = "1 2 4 8 16 32 64";
-      # Do not ban for more than 1 week
-      maxtime = "168h";
-      # Calculate the bantime based on all the violations
-      overalljails = true;
-    };
-  };
+  networking.networkmanager.enable = true;
 
   # Nix configuration
-  nix.settings.trusted-users = ["@wheel"];
+  nix.settings.trusted-users = [ "@wheel" ];
   nix = {
     package = pkgs.nixVersions.stable;
     extraOptions = ''
@@ -54,14 +29,19 @@
     ports = [ 22 ];
     settings = {
       PasswordAuthentication = false;
-      AllowUsers = [ "deploy" "benevides" "kanagawa" "lemos" "magueta" "marinho" ];
+      AllowUsers = [
+        "deploy"
+        "benevides"
+        "kanagawa"
+        "lemos"
+        "magueta"
+        "marinho"
+      ];
       X11Forwarding = false;
       # "yes", "without-password", "prohibit-password", "forced-commands-only", "no"
       PermitRootLogin = "prohibit-password";
     };
   };
-  # Magueta wants this
-  programs.mosh.enable = true;
 
   # Extra stuff
   programs.neovim = {
@@ -71,5 +51,5 @@
   };
 
   # Don't change this!
-  system.stateVersion = "24.05";
+  system.stateVersion = "25.03";
 }
