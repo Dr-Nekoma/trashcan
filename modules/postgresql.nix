@@ -1,5 +1,8 @@
 { pkgs, config, ... }:
 
+let
+  pg = pkgs.postgresql_17;
+in
 {
   environment.systemPackages = with pkgs; [
     barman
@@ -8,7 +11,7 @@
   # Postgres
   services.postgresql = {
     enable = true;
-    package = pkgs.postgresql_17;
+    package = pg;
     ensureDatabases = [
       "lyceum"
     ];
@@ -16,6 +19,14 @@
       {
         name = "lyceum";
         ensureDBOwnership = true;
+        ensureClauses = {
+          login = true;
+          createrole = true;
+        };
+      }
+
+      {
+        name = "migrations";
         ensureClauses = {
           login = true;
           createrole = true;
@@ -31,7 +42,7 @@
       "pg_stat_statements.max" = 10000;
       "pg_stat_statements.track" = "all";
     };
-    extraPlugins = with pkgs.postgresql_17.pkgs; [
+    extensions = with pg.pkgs; [
       omnigres
       periods
       repmgr
@@ -75,17 +86,23 @@
 
   # Add passsword after pg starts
   # https://discourse.nixos.org/t/assign-password-to-postgres-user-declaratively/9726/3
-  # systemd.services.postgresql.postStart =
-  #   let
-  #     password_file_path = config.age.secrets.pg_mp.path;
-  #   in ''
-  #   $PSQL -tA <<'EOF'
-  #     DO $$
-  #     DECLARE password TEXT;
-  #     BEGIN
-  #       password := trim(both from replace(pg_read_file('${password_file_path}'), E'\n', '''));
-  #       EXECUTE format('ALTER USER lyceum WITH PASSWORD '''%s''';', password);
-  #     END $$;
-  #   EOF
-  # '';
+  systemd.services.postgresql.postStart =
+    let
+      pg_lyceum_secret = config.sops.secrets."postgresql/db_lyceum/user_lyceum".path;
+      pg_migrations_secret = config.sops.secrets."postgresql/db_lyceum/user_migrations".path;
+    in
+    ''
+      $PSQL -tA <<'EOF'
+        DO $$
+        DECLARE lyceum_password TEXT;
+        DECLARE migrations_password TEXT;
+        BEGIN
+          lyceum_password := trim(both from replace(pg_read_file('${pg_lyceum_secret}'), E'\n', '''));
+          EXECUTE format('ALTER USER lyceum WITH PASSWORD '''%s''';', lyceum_password);
+
+          migrations_password := trim(both from replace(pg_read_file('${pg_migrations_secret}'), E'\n', '''));
+          EXECUTE format('ALTER USER migrations WITH PASSWORD '''%s''';', migrations_password);
+        END $$;
+      EOF
+    '';
 }

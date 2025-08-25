@@ -25,8 +25,10 @@ Enter the Nix shell via the cli, or leverage direnv:
   nix build .#qcow
   # Followed by
   nix run .#qemu
-  # Now connect to postgres
-  sudo --user postgres psql
+#+end_src
+
+#+begin_src shell
+  journalctl -xau postgresql
 #+end_src
 
 *** Custom ISO 

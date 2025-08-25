@@ -180,6 +180,21 @@
         "type": "github"
       }
     },
+    "impermanence": {
+      "locked": {
+        "lastModified": 1737831083,
+        "narHash": "sha256-LJggUHbpyeDvNagTUrdhe/pRVp4pnS6wVKALS782gRI=",
+        "owner": "nix-community",
+        "repo": "impermanence",
+        "rev": "4b3e914cdf97a5b536a889e939fb2fd2b043a170",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "impermanence",
+        "type": "github"
+      }
+    },
     "nix": {
       "inputs": {
         "flake-compat": [
@@ -305,9 +320,31 @@
         "devenv": "devenv",
         "disko": "disko",
         "flake-parts": "flake-parts_2",
+        "impermanence": "impermanence",
         "nixos-generators": "nixos-generators",
         "nixpkgs": "nixpkgs",
+        "sops-nix": "sops-nix",
         "treefmt-nix": "treefmt-nix"
+      }
+    },
+    "sops-nix": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1754988908,
+        "narHash": "sha256-t+voe2961vCgrzPFtZxha0/kmFSHFobzF00sT8p9h0U=",
+        "owner": "Mic92",
+        "repo": "sops-nix",
+        "rev": "3223c7a92724b5d804e9988c6b447a0d09017d48",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Mic92",
+        "repo": "sops-nix",
+        "type": "github"
       }
     },
     "treefmt-nix": {

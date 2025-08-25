@@ -30,12 +30,8 @@
     settings = {
       PasswordAuthentication = false;
       AllowUsers = [
-        "deploy"
-        "benevides"
-        "kanagawa"
-        "lemos"
-        "magueta"
-        "marinho"
+        "nixos"
+        "bene"
       ];
       X11Forwarding = false;
       # "yes", "without-password", "prohibit-password", "forced-commands-only", "no"
