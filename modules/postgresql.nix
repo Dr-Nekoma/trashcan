@@ -92,7 +92,7 @@ in
       pg_migrations_secret = config.sops.secrets."postgresql/db_lyceum/user_migrations".path;
     in
     ''
-      $PSQL -tA <<'EOF'
+      psql -tA <<'EOF'
         DO $$
         DECLARE lyceum_password TEXT;
         DECLARE migrations_password TEXT;

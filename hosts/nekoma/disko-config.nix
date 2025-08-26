@@ -43,4 +43,10 @@
       };
     };
   };
+
+  # fileSystems = {
+  #   "/persist".neededForBoot = true;
+  #   "/home".neededForBoot = true;
+  #   "/var/log".neededForBoot = true;
+  # };
 }

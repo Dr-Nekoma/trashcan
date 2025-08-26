@@ -5,21 +5,18 @@
     directories = [
       "/etc/NetworkManager/system-connections"
       "/var/lib/nixos"
-      "/var/log"
+      "/var/lib/postgresql"
       "/var/lib/sops-nix/"
-      "/var/lib/systemd/coredump"
+      "/var/lib/systemd"
+      # "/var/lib/tailscale"
+      "/var/log"
     ];
     files = [
       # machine-id is used by systemd for the journal, if you don't persist this
       # file you won't be able to easily use journalctl to look at journals for
       # previous boots.
       "/etc/machine-id"
-      {
-        file = "/var/users/root";
-        parentDirectory = {
-          mode = "u=rwx,g=,o=";
-        };
-      }
+      # "/etc/resolv.conf"
     ];
     users.benevides = {
       directories = [
