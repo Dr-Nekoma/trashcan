@@ -1,11 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-
-    nixos-generators = {
-      url = "github:nix-community/nixos-generators";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    agenix.url = "github:ryantm/agenix";
 
     devenv = {
       url = "github:cachix/devenv";
@@ -23,17 +18,20 @@
 
     impermanence.url = "github:nix-community/impermanence";
 
-    treefmt-nix.url = "github:numtide/treefmt-nix";
-
-    sops-nix = {
-      url = "github:Mic92/sops-nix";
+    nixos-generators = {
+      url = "github:nix-community/nixos-generators";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+
+    treefmt-nix.url = "github:numtide/treefmt-nix";
   };
 
   outputs =
     inputs@{
       self,
+      agenix,
       flake-parts,
       nixpkgs,
       disko,
@@ -41,20 +39,14 @@
       impermanence,
       nixos-generators,
       treefmt-nix,
-      sops-nix,
       ...
     }:
     let
       hostModules = host: [
+        agenix.nixosModules.default
         disko.nixosModules.disko
         impermanence.nixosModules.impermanence
-        sops-nix.nixosModules.sops
         host
-      ];
-      bootstrapModules = [
-        ./modules/basic.nix
-        ./modules/users.nix
-        ./modules/postgresql.nix
       ];
     in
     flake-parts.lib.mkFlake { inherit inputs; } {
@@ -83,7 +75,6 @@
               modules = hostModules ./hosts/nekoma/configuration.nix;
               specialArgs = {
                 isImageTarget = true;
-                extraModules = bootstrapModules;
               };
               format = "iso";
             };
@@ -93,7 +84,6 @@
               modules = hostModules ./hosts/nekoma/configuration.nix;
               specialArgs = {
                 isImageTarget = true;
-                extraModules = bootstrapModules;
               };
               format = "qcow";
             };
@@ -134,9 +124,9 @@
                   {
                     packages = with pkgs; [
                       age
+                      agenix.packages.${system}.default
                       bash
                       just
-                      sops
                     ];
 
                     languages.opentofu = {
@@ -158,7 +148,6 @@
             modules = hostModules ./hosts/nekoma/configuration.nix;
             specialArgs = {
               isImageTarget = false;
-              extraModules = bootstrapModules;
             };
           };
         };

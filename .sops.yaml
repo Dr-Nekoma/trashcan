@@ -1,8 +1,0 @@
-# Public Keys
-keys:
-  - &bene age1pf8a9n7pesy9kj2ty9d44qtja774q06sdp2kktqrutm8mhs8m4zqvrvrqp
-creation_rules:
-  - path_regex: secrets/secrets.yaml$
-    key_groups:
-    - age:
-      - *bene

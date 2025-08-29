@@ -2,55 +2,66 @@
   lib,
   config,
   isImageTarget,
-  extraModules ? [ ],
   ...
 }:
 let
   requiredModules = [
-    ./persist.nix
+    ../../modules
+    ../../users
   ];
   optionalModules = lib.optionals (!isImageTarget) [
-    ./disko-config.nix
     ./hardware-configuration.nix
   ];
 in
 {
-  imports = requiredModules ++ optionalModules ++ extraModules;
+  imports = requiredModules ++ optionalModules;
 
-  # sops-nix executes secretsForUsers before impermanence module activation,
-  # leading to incorrect user password provision on startup.
-  # To fix this behaviour, host keys can be simply moved to persistent directory explicitly.
-  # config.services.openssh.hostKeys = [
-  #   {
-  #     bits = 4096;
-  #     path = "${cfg.persistentDirectory}/etc/ssh/ssh_host_rsa_key";
-  #     type = "rsa";
-  #   }
-  #   {
-  #     path = "${cfg.persistentDirectory}/etc/ssh/ssh_host_ed25519_key";
-  #     type = "ed25519";
-  #   }
-  # ];
+  # This is required by ZFS
+  # https://search.nixos.org/options?channel=unstable&show=networking.hostId&query=networking.hostId
+  # From the NixOS docs:
+  # You should try to make this ID unique among your machines.
+  # You can generate a random 32-bit ID using the following commands:
+  # head -c 8 /etc/machine-id
+  #
+  # (this derives it from the machine-id that systemd generates) or
+  #
+  # head -c4 /dev/urandom | od -A none -t x4
+  networking.hostId = "41d2315f";
 
-  sops = {
-    defaultSopsFile = ../../secrets/secrets.yaml;
-    defaultSopsFormat = "yaml";
-    age = {
-      # sshKeyPaths = [ "/nix/persist/etc/ssh/ssh_host_ed25519_key" ];
-      keyFile = "/nix/persist/var/lib/sops-nix/age.key";
-      generateKey = true;
-    };
-
-    secrets = {
-      "postgresql/db_lyceum/user_lyceum" = {
-        owner = "postgres";
-        group = "postgres";
-      };
-
-      "postgresql/db_lyceum/user_migrations" = {
-        owner = "postgres";
-        group = "postgres";
-      };
-    };
+  modules.common = {
+    enable = true;
   };
+
+  modules.disko = {
+    enable = true;
+    profile = "vm";
+  };
+
+  # ZFS
+  # boot = {
+  #   supportedFilesystems = [ "zfs" ];
+  #   zfs = {
+  #     forceImportRoot = false;
+  #   };
+  # };
+
+  # modules.impermanence = {
+  #   enable = true;
+  #   withSecrets = false;
+  # };
+
+  # age = {
+  #   identityPaths = [
+  #     "/nix/persist/etc/ssh/ssh_host_ed25519_key"
+  #     "/nix/persist/etc/ssh/ssh_host_rsa_key"
+  #   ];
+  #   secrets = {
+  #     pg_lyceum = {
+  #       file = ../../secrets/pg_lyceum.age;
+  #       owner = "postgres";
+  #       group = "postgres";
+  #       mode = "0440";
+  #     };
+  #   };
+  # };
 }

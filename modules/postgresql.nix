@@ -88,8 +88,11 @@ in
   # https://discourse.nixos.org/t/assign-password-to-postgres-user-declaratively/9726/3
   systemd.services.postgresql.postStart =
     let
-      pg_lyceum_secret = config.sops.secrets."postgresql/db_lyceum/user_lyceum".path;
-      pg_migrations_secret = config.sops.secrets."postgresql/db_lyceum/user_migrations".path;
+      file = builtins.readFile config.age.secrets.pg_lyceum.path;
+      json = builtins.toJSON file;
+      users = builtins.catAttrs "users" json;
+      pg_lyceum_user_secret = users.lyceum;
+      pg_migratiton_user_secret = users.migrations;
     in
     ''
       psql -tA <<'EOF'
@@ -97,10 +100,10 @@ in
         DECLARE lyceum_password TEXT;
         DECLARE migrations_password TEXT;
         BEGIN
-          lyceum_password := trim(both from replace(pg_read_file('${pg_lyceum_secret}'), E'\n', '''));
+          lyceum_password := trim(both from replace(pg_read_file('${pg_lyceum_user_secret}'), E'\n', '''));
           EXECUTE format('ALTER USER lyceum WITH PASSWORD '''%s''';', lyceum_password);
 
-          migrations_password := trim(both from replace(pg_read_file('${pg_migrations_secret}'), E'\n', '''));
+          migrations_password := trim(both from replace(pg_read_file('${pg_migratiton_user_secret}'), E'\n', '''));
           EXECUTE format('ALTER USER migrations WITH PASSWORD '''%s''';', migrations_password);
         END $$;
       EOF
