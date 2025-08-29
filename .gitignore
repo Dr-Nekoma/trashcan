@@ -95,3 +95,7 @@ output.json
 .env*
 result
 *.qcow2
+
+# Extras
+keys/*
+!keys/.gitkeep

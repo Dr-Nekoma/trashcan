@@ -15,6 +15,7 @@
             esp = {
               size = "512M";
               type = "EF00";
+              label = "ESP";
               content = {
                 type = "filesystem";
                 format = "vfat";
@@ -27,6 +28,7 @@
             };
             root = {
               size = "100%";
+              label = "nixos";
               content = {
                 type = "filesystem";
                 format = "ext4";

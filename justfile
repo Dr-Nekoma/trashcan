@@ -1,63 +1,51 @@
 set dotenv-load
 set export := true
 
-target_region := env_var_or_default("TARGET_REGION", "us-east-1")
-target_vm := env_var_or_default("TARGET_VM", "nekoma")
-target_vm_bootstap := env_var_or_default("TARGET_VM_BOOTSTRAP", "bootstrap")
-target_flake := ".#" + target_vm
-target_flake_bootstrap := ".#nixosConfigurations." + target_vm_bootstap
+hosts_dir := justfile_directory() + "/hosts"
+keys_dir := justfile_directory() + "/keys"
+modules_dir := justfile_directory() + "/modules"
+tofu_dir := justfile_directory() + "/tofu"
 
-modules := justfile_directory() + "/module"
+target_vm := env_var_or_default("TARGET_VM", "bootstrap")
+
 release := `git tag -l --sort=-creatordate | head -n 1`
 replace := if os() == "linux" { "sed -i" } else { "sed -i '' -e" }
 
 # For lazy people
-alias r := run
+alias bi := build-iso
+alias bq := build-qemu
 
 # Lists all availiable targets
 default:
-    @echo "Setting TARGET_FLAKE={{ target_flake }}"
     just --list
 
-# Builds the remote AWS EC2 VM
+# ----------------------------
+# Nix Commands
+# ----------------------------
+# Default Build, uses `nixosConfiguration`
 build:
     nix build ".#nixosConfigurations.{{target_vm}}.config.system.build.toplevel"
 
-# Deploys the VM to EC2
-deploy:
-    @./deploy.sh --target-flake {{ target_flake }}
+build-iso:
+    nix build ".#iso"
+
+build-qemu:
+    nix build ".#qemu"
 
 # Loads the current Flake into a REPL
 repl:
     nix repl {{target_flake}}
 
 # Runs a Qemu VM, to quickly test changes
-run:
-    nix run
+run-qemu:
+    nix run ".#qemu"
 
-# ----------------
-# Agenix Commands
-# ----------------
-# Updates agenix keys
+# ----------------------------
+# Age-related Commands
+# ----------------------------
 rekey:
     cd secrets && nix run github:ryantm/agenix -- -r
 
-# ------------------
-# Terraform Commands
-# ------------------
-
-# Updates terraform variables
-update-vars:
-    @./generate-inputs.sh --flake ".#{{ target_vm_bootstap }}" --region {{ target_region }}
-
-# Runs `terraform plan`
-plan:
-    terraform plan -var-file="inputs.tfvars" -out tfplan
-
-# Runs `terraform apply`
-apply:
-    terraform apply "tfplan"
-
-# Destroys Terraform infra
-destroy:
-    terraform apply -destroy -var-file="inputs.tfvars"
+# ----------------------------
+# OpenTofu Commands
+# ----------------------------

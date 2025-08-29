@@ -1,11 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-
-    nixos-generators = {
-      url = "github:nix-community/nixos-generators";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    agenix.url = "github:ryantm/agenix";
 
     devenv = {
       url = "github:cachix/devenv";
@@ -21,28 +16,37 @@
       url = "github:hercules-ci/flake-parts";
     };
 
+    impermanence.url = "github:nix-community/impermanence";
+
+    nixos-generators = {
+      url = "github:nix-community/nixos-generators";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+
     treefmt-nix.url = "github:numtide/treefmt-nix";
   };
 
   outputs =
     inputs@{
       self,
+      agenix,
       flake-parts,
       nixpkgs,
       disko,
       devenv,
+      impermanence,
       nixos-generators,
       treefmt-nix,
       ...
     }:
     let
-      mainModules = [
-        inputs.disko.nixosModules.disko
-        ./configuration.nix
-      ];
-      bootstrapModules = [
-        ./modules/basic.nix
-        ./modules/users.nix
+      hostModules = host: [
+        agenix.nixosModules.default
+        disko.nixosModules.disko
+        impermanence.nixosModules.impermanence
+        host
       ];
     in
     flake-parts.lib.mkFlake { inherit inputs; } {
@@ -68,20 +72,18 @@
           packages = {
             iso = nixos-generators.nixosGenerate {
               system = "x86_64-linux";
-              modules = mainModules;
+              modules = hostModules ./hosts/nekoma/configuration.nix;
               specialArgs = {
                 isImageTarget = true;
-                extraModules = bootstrapModules;
               };
               format = "iso";
             };
 
-            qcow = nixos-generators.nixosGenerate {
+            qemu = nixos-generators.nixosGenerate {
               system = "x86_64-linux";
-              modules = mainModules;
+              modules = hostModules ./hosts/nekoma/configuration.nix;
               specialArgs = {
                 isImageTarget = true;
-                extraModules = bootstrapModules;
               };
               format = "qcow";
             };
@@ -89,6 +91,7 @@
 
           # nix run
           apps = {
+            # nix run .#qemu
             qemu = {
               type = "app";
 
@@ -97,7 +100,7 @@
 
                 trap "rm -f $NIX_DISK_IMAGE" EXIT
 
-                cp ${self.packages.x86_64-linux.qcow}/nixos.qcow2 $NIX_DISK_IMAGE
+                cp ${self.packages.x86_64-linux.qemu}/nixos.qcow2 $NIX_DISK_IMAGE
                 chmod u+w $NIX_DISK_IMAGE
 
                 ${pkgs.qemu}/bin/qemu-system-x86_64 \
@@ -120,7 +123,10 @@
                   { pkgs, lib, ... }:
                   {
                     packages = with pkgs; [
+                      age
+                      agenix.packages.${system}.default
                       bash
+                      just
                     ];
 
                     languages.opentofu = {
@@ -139,7 +145,7 @@
       flake = {
         nixosConfigurations = {
           bootstrap = nixpkgs.lib.nixosSystem {
-            modules = mainModules;
+            modules = hostModules ./hosts/nekoma/configuration.nix;
             specialArgs = {
               isImageTarget = false;
             };
