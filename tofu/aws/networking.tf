@@ -1,70 +1,67 @@
-locals {
-  availability_zone = "${var.region}c"
-}
-
-# -----------
-# Networking
-# -----------
 # VPC
-resource "aws_vpc" "vpc" {
-  cidr_block = "10.0.0.0/16"
+resource "aws_vpc" "main" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
 
   tags = {
     Category = "network"
-    Project  = "trashcan"
+    Project  = var.project
   }
 }
 
+# Internet Gateway
+resource "aws_internet_gateway" "main" {
+  vpc_id = aws_vpc.main.id
 
-# Gateway
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.vpc.id
+  tags = {
+    Category = "network"
+    Project  = var.project
+  }
 }
 
-# Subnet
-resource "aws_subnet" "subnet" {
-  vpc_id            = aws_vpc.vpc.id
-  cidr_block        = "10.0.0.0/24"
-  availability_zone = local.availability_zone
-
-  # This makes it a public subnet
+# Public Subnet
+resource "aws_subnet" "public" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.1.0/24"
+  availability_zone       = "${var.region}${var.availability_zone}"
   map_public_ip_on_launch = true
-  depends_on              = [aws_internet_gateway.gw]
+  depends_on              = [aws_internet_gateway.main]
 
   tags = {
     Category = "network"
-    Project  = "trashcan"
+    Project  = var.project
   }
 }
 
-# Create Route Table
-resource "aws_route_table" "rt" {
-  vpc_id = aws_vpc.vpc.id
+# Route Table
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.main.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.gw.id
+    gateway_id = aws_internet_gateway.main.id
   }
 
   tags = {
     Category = "network"
-    Project  = "trashcan"
+    Project  = var.project
   }
 }
 
-# Associate Route Table with Subnet
-resource "aws_route_table_association" "rta" {
-  subnet_id      = aws_subnet.subnet.id
-  route_table_id = aws_route_table.rt.id
+# Route Table Association
+resource "aws_route_table_association" "public" {
+  subnet_id      = aws_subnet.public.id
+  route_table_id = aws_route_table.public.id
 }
 
 # Security Group
-resource "aws_security_group" "sg" {
-  vpc_id = aws_vpc.vpc.id
+resource "aws_security_group" "vm" {
+  name_prefix = "sg-${var.project}"
+  vpc_id      = aws_vpc.main.id
 
-  # The "nixos" Terraform module requires SSH access to the machine to deploy
-  # our desired NixOS configuration.
   ingress {
+    description = "SSH"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
@@ -72,6 +69,7 @@ resource "aws_security_group" "sg" {
   }
 
   ingress {
+    description = "HTTP"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
@@ -79,6 +77,7 @@ resource "aws_security_group" "sg" {
   }
 
   ingress {
+    description = "HTTPS"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
@@ -94,6 +93,7 @@ resource "aws_security_group" "sg" {
 
   tags = {
     Category = "network"
-    Project  = "trashcan"
+    Project  = var.project
   }
 }
+

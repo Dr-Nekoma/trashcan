@@ -11,8 +11,9 @@ let
 in
 {
   options.modules.ssh = {
-    enable = mkEnableOption "ssh";
+    enable = mkEnableOption "Enable/Disable custom SSH options";
   };
+
   config = mkMerge [
     (mkIf cfg.enable {
       services.openssh = {
@@ -29,9 +30,10 @@ in
         };
       };
     })
-    (mkIf (impermanence_module.enable) {
+
+    (mkIf impermanence_module.enable {
       services.openssh = {
-        hostKeys = mkIf (impermanence_module.enable) [
+        hostKeys = [
           {
             type = "ed25519";
             path = "${impermanence_module.directory}/etc/ssh/ssh_host_ed25519_key";

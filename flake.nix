@@ -42,11 +42,22 @@
       ...
     }:
     let
-      hostModules = host: [
+      bootstrapModules = [
         agenix.nixosModules.default
         disko.nixosModules.disko
         impermanence.nixosModules.impermanence
-        host
+        ./hosts/bootstrap/configuration.nix
+      ];
+      bootstrapArgs = {
+        diskoProfile = "vm";
+        hostId = "41d2315f";
+      };
+
+      nekomaModules = [
+        agenix.nixosModules.default
+        disko.nixosModules.disko
+        impermanence.nixosModules.impermanence
+        ./hosts/nekoma/configuration.nix
       ];
     in
     flake-parts.lib.mkFlake { inherit inputs; } {
@@ -70,21 +81,24 @@
 
           # nix build
           packages = {
+            # ===============
+            # Boostrap Images
+            # ===============
+            # ISO
+            # nix build .#iso
             iso = nixos-generators.nixosGenerate {
               system = "x86_64-linux";
-              modules = hostModules ./hosts/nekoma/configuration.nix;
-              specialArgs = {
-                isImageTarget = true;
-              };
+              modules = bootstrapModules;
+              specialArgs = bootstrapArgs;
               format = "iso";
             };
 
+            # QEMU
+            # nix build .#qemu
             qemu = nixos-generators.nixosGenerate {
               system = "x86_64-linux";
-              modules = hostModules ./hosts/nekoma/configuration.nix;
-              specialArgs = {
-                isImageTarget = true;
-              };
+              modules = bootstrapModules;
+              specialArgs = bootstrapArgs;
               format = "qcow";
             };
           };
@@ -125,6 +139,7 @@
                     packages = with pkgs; [
                       age
                       agenix.packages.${system}.default
+                      awscli2
                       bash
                       just
                     ];
@@ -144,10 +159,18 @@
 
       flake = {
         nixosConfigurations = {
-          bootstrap = nixpkgs.lib.nixosSystem {
-            modules = hostModules ./hosts/nekoma/configuration.nix;
+          # sudo nixos-rebuild boot --flake .#bootstrap_vm
+          bootstrap_vm = nixpkgs.lib.nixosSystem {
+            modules = bootstrapModules;
+            specialArgs = bootstrapArgs;
+          };
+
+          # sudo nixos-rebuild boot --flake .#nekoma_vm
+          nekoma_vm = nixpkgs.lib.nixosSystem {
+            modules = nekomaModules;
             specialArgs = {
-              isImageTarget = false;
+              diskoProfile = "vm";
+              hostId = bootstrapArgs.hostId;
             };
           };
         };

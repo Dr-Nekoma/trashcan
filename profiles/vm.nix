@@ -4,6 +4,7 @@
       main = {
         type = "disk";
         device = "/dev/sda";
+        imageSize = "64G";
         content = {
           type = "gpt";
           partitions = {

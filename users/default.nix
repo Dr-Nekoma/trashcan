@@ -3,7 +3,7 @@
   imports = [ ./bene.nix ];
 
   users = {
-    defaultUserShell = pkgs.zsh;
+    # defaultUserShell = pkgs.zsh;
     mutableUsers = false;
   };
 }

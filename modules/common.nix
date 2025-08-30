@@ -19,10 +19,17 @@ in
   };
   config = mkMerge [
     (mkIf cfg.enable {
-      boot.tmp.cleanOnBoot = true;
+      boot = {
+        loader = {
+          efi.canTouchEfiVariables = true;
+        };
+        tmp.cleanOnBoot = true;
+      };
+
       documentation.enable = false;
 
       environment.systemPackages = with pkgs; [
+        git
         pciutils
       ];
 
@@ -50,8 +57,10 @@ in
         optimise.automatic = true;
       };
 
+      systemd.services.nix-daemon.environment.TMPDIR = "/var/tmp";
+
       # Extra stuff
-      programs.zsh.enable = true;
+      # programs.zsh.enable = true;
       programs.neovim = {
         enable = true;
         viAlias = true;

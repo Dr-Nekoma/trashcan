@@ -19,6 +19,20 @@ Enter the Nix shell via the cli, or leverage direnv:
   direnv allow
 #+end_src
 
+*** Setting Up Local Keys
+
+If you dont have any keys setup already:
+
+#+begin_src shell
+  cd keys
+  ssh-keygen -t ed25519 -C "your.email@gmail.com"
+  cd ../secrets
+  # Either, if you have a key in your agent
+  agenix --rekey
+  # Or
+  agenix --rekey -i ../keys/your_private_key
+#+end_src
+
 *** Qemu VM
 
 #+begin_src shell
