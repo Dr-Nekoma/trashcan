@@ -27,4 +27,5 @@ let
 in
 {
   "pg_lyceum.age".publicKeys = everyone;
+  "server_ssh.age".publicKeys = everyone;
 }

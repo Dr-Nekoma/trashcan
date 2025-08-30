@@ -37,6 +37,10 @@ in
     profile = "vm";
   };
 
+  modules.ssh = {
+    enable = true;
+  };
+
   # ZFS
   # boot = {
   #   supportedFilesystems = [ "zfs" ];

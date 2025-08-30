@@ -2,6 +2,7 @@
 
 let
   cfg = config.modules.ssh;
+  disko_module = config.modules.disko;
   impermanence_module = config.modules.impermanence;
   inherit (lib)
     mkEnableOption
@@ -11,8 +12,9 @@ let
 in
 {
   options.modules.ssh = {
-    enable = mkEnableOption "ssh";
+    enable = mkEnableOption "Enable/Disable custom SSH options";
   };
+  
   config = mkMerge [
     (mkIf cfg.enable {
       services.openssh = {
@@ -29,20 +31,17 @@ in
         };
       };
     })
+
+    # Impermance-based configs
+    # https://discourse.nixos.org/t/how-to-define-actual-ssh-host-keys-not-generate-new/31775/8
+    ## If enabled
     (mkIf (impermanence_module.enable) {
-      services.openssh = {
-        hostKeys = mkIf (impermanence_module.enable) [
-          {
-            type = "ed25519";
-            path = "${impermanence_module.directory}/etc/ssh/ssh_host_ed25519_key";
-          }
-          {
-            type = "rsa";
-            bits = 4096;
-            path = "${impermanence_module.directory}/etc/ssh/ssh_host_rsa_key";
-          }
-        ];
-      };
+      services.openssh.extraConfig = "HostKey /run/secrets/server_ssh";
+    })
+
+    ## Otherwise
+    (mkIf (!impermanence_module.enable) {
+      services.openssh.extraConfig = "HostKey /etc/agenix/server_key";
     })
   ];
 }

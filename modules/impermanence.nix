@@ -16,7 +16,6 @@ in
 {
   options.modules.impermanence = {
     enable = mkEnableOption "Enable the Impermanence module, for ephemeral state outside the Nix configuration";
-    withSecrets = mkEnableOption "Enable/Disable support for Agenix";
     directory = mkOption {
       description = "The directory to use for the impermanence module.";
       default = "/persist";
@@ -64,20 +63,6 @@ in
           };
         };
       };
-
-      # Workaround for the following service failing with a bind mount for /etc/machine-id
-      # see: https://github.com/nix-community/impermanence/issues/229
-      # boot.initrd.systemd.suppressedUnits = [ "systemd-machine-id-commit.service" ];
-      # systemd.suppressedSystemUnits = [ "systemd-machine-id-commit.service" ];
-
-    })
-    (mkIf (cfg.withSecrets) {
-      environment.persistence."${cfg.directory}" = {
-        directories = [
-          "/etc/agenix"
-        ];
-      };
-      virtualisation.vmVariantWithDisko.agenix.age.sshKeyPaths = [ "/tmp/shared/sops_ed25519_key" ];
     })
   ];
 }
