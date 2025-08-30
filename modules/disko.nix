@@ -1,7 +1,6 @@
 {
   lib,
   config,
-  modulesPath,
   ...
 }:
 
@@ -67,5 +66,4 @@ in
       security.sudo.wheelNeedsPassword = false;
     })
   ];
-
 }
