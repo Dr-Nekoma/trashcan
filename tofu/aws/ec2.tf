@@ -29,27 +29,21 @@ resource "aws_key_pair" "ssh_key" {
 resource "aws_instance" "vm" {
   ami                         = data.aws_ami.nixos_amd.id
   key_name                    = aws_key_pair.ssh_key.key_name
-  instance_type = var.instace_type
-  private_ip                  = var.vm_private_ip
+  instance_type = var.instance_type
   associate_public_ip_address = false
   subnet_id                   = aws_subnet.public.id
   vpc_security_group_ids      = [aws_security_group.vm.id]
 
-  user_data = base64encode(templatefile("${path.module}/user-data.sh", {
+  user_data_base64 = base64encode(templatefile("${path.module}/user-data.sh", {
     flake_url = var.flake_url,
     flake_system = var.flake_system,
+    private_key = tls_private_key.ssh_key.private_key_openssh
   }))
 
   root_block_device {
     volume_size = 100
     volume_type = "gp3"
   }
-
-  # To be used by the real deploy later
-  user_data = <<-EOF
-    #!/bin/sh
-    (umask 377; echo '${tls_private_key.ssh_key.private_key_openssh}' > /var/lib/id_ed25519)
-    EOF
 
   tags = {
     Category = "vm"

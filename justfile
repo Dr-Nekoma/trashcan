@@ -4,9 +4,10 @@ set export := true
 hosts_dir := justfile_directory() + "/hosts"
 keys_dir := justfile_directory() + "/keys"
 modules_dir := justfile_directory() + "/modules"
-tofu_dir := justfile_directory() + "/tofu"
+tofu_dir := justfile_directory() + "/tofu/aws"
 
 target_vm := env_var_or_default("TARGET_VM", "bootstrap")
+target_flake := env_var_or_default("TARGET_FLAKE", "bootstrap")
 
 release := `git tag -l --sort=-creatordate | head -n 1`
 replace := if os() == "linux" { "sed -i" } else { "sed -i '' -e" }
@@ -43,9 +44,29 @@ run-qemu:
 # ----------------------------
 # Age-related Commands
 # ----------------------------
+# Resets the agenix file
 rekey:
     cd secrets && nix run github:ryantm/agenix -- -r
 
 # ----------------------------
 # OpenTofu Commands
 # ----------------------------
+# Initializes the tofu dir
+init:
+    cd {{tofu_dir}}
+    tofu init
+
+# Plan infra changes
+plan:
+    cd {{tofu_dir}}
+    tofu plan -out tfplan
+
+# Provision infra changes
+apply:
+    cd {{tofu_dir}}
+    tofu apply "tfplan"
+
+# Destroy infra
+destroy:
+    cd {{tofu_dir}}
+    tofu apply -destroy -auto-approve

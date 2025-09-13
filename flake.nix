@@ -159,6 +159,23 @@
 
       flake = {
         nixosConfigurations = {
+          # AWS
+          # sudo nixos-rebuild boot --flake .#bootstrap
+          bootstrap = nixpkgs.lib.nixosSystem {
+            modules = bootstrapModules;
+            specialArgs = bootstrapArgs;
+          };
+
+          # sudo nixos-rebuild boot --flake .#nekoma
+          nekoma = nixpkgs.lib.nixosSystem {
+            modules = nekomaModules;
+            specialArgs = {
+              diskoProfile = "aws";
+              hostId = bootstrapArgs.hostId;
+            };
+          };
+
+          # QEMU
           # sudo nixos-rebuild boot --flake .#bootstrap_vm
           bootstrap_vm = nixpkgs.lib.nixosSystem {
             modules = bootstrapModules;
