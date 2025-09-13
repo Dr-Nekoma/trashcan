@@ -1,39 +1,51 @@
-# ------------
-# EC2 Instance
-# ------------
-data "aws_ami" "nixos_ami" {
-  most_recent = true
-
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
-
-  filter {
-    name   = "name"
-    values = ["nixos/${var.ami_version}*"]
-  }
-
-  owners = ["427812963091"]
+locals {
+  host_settings = fileset(".", "../outputs/hosts.json")
 }
 
+# -----
+# Keys
+# -----
+resource "tls_private_key" "ssh_key" {
+  algorithm = "ED25519"
+}
+
+# Synchronize the SSH private key to a local file that 
+# the "nixos" module can properly use it later
+resource "local_sensitive_file" "ssh_private_key" {
+  filename = "${path.module}/outputs/id_ed25519"
+  content  = tls_private_key.ssh_key.private_key_openssh
+}
+
+resource "local_file" "ssh_public_key" {
+  filename = "${path.module}/outputs/id_ed25519.pub"
+  content  = tls_private_key.ssh_key.public_key_openssh
+}
+
+resource "aws_key_pair" "ssh_key" {
+  public_key = tls_private_key.ssh_key.public_key_openssh
+}
+
+# EC2
 resource "aws_instance" "vm" {
-  ami                         = data.aws_ami.nixos_ami.id
-  subnet_id                   = aws_subnet.subnet.id
-  vpc_security_group_ids      = [aws_security_group.sg.id]
+  ami                         = data.aws_ami.nixos_amd.id
   key_name                    = aws_key_pair.ssh_key.key_name
+  instance_type = var.instace_type
   private_ip                  = var.vm_private_ip
   associate_public_ip_address = false
+  subnet_id                   = aws_subnet.public.id
+  vpc_security_group_ids      = [aws_security_group.vm.id]
 
-  # We could use a smaller instance size, but at the time of this writing the
-  # t3.micro instance type is available for 750 hours under the AWS free tier.
-  instance_type = "t3.micro"
+  user_data = base64encode(templatefile("${path.module}/user-data.sh", {
+    flake_url = var.flake_url,
+    flake_system = var.flake_system,
+  }))
 
   root_block_device {
-    volume_size = 80
+    volume_size = 100
     volume_type = "gp3"
   }
 
+  # To be used by the real deploy later
   user_data = <<-EOF
     #!/bin/sh
     (umask 377; echo '${tls_private_key.ssh_key.private_key_openssh}' > /var/lib/id_ed25519)
@@ -45,33 +57,14 @@ resource "aws_instance" "vm" {
   }
 }
 
-# ----------
-# Static IP
-# ----------
+# Elastic IP
 resource "aws_eip" "eip" {
-  domain                    = "vpc"
-  instance                  = aws_instance.vm.id
-  associate_with_private_ip = var.vm_private_ip
-  depends_on                = [aws_internet_gateway.gw]
-}
+  domain     = "vpc"
+  instance   = aws_instance.vm.id
+  depends_on = [aws_internet_gateway.main]
 
-# This ensures that the instance is reachable via `ssh` before we deploy NixOS
-resource "null_resource" "wait" {
-  provisioner "remote-exec" {
-    connection {
-      host        = aws_eip.eip.public_ip
-      private_key = tls_private_key.ssh_key.private_key_openssh
-    }
-
-    inline = [":"] # Do nothing; we're just testing SSH connectivity
+  tags = {
+    Category = "ip"
+    Project  = "trashcan"
   }
-}
-
-module "nixos" {
-  source      = "github.com/Gabriella439/terraform-nixos-ng//nixos?ref=af1a0af57287851f957be2b524fcdc008a21d9ae"
-  host        = "root@${aws_eip.eip.public_ip}"
-  flake       = var.flake
-  arguments   = []
-  ssh_options = "-o StrictHostKeyChecking=accept-new -i ${local_sensitive_file.ssh_private_key.filename}"
-  depends_on  = [null_resource.wait]
 }

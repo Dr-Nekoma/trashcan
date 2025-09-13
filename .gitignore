@@ -99,3 +99,5 @@ result
 # Extras
 keys/*
 !keys/.gitkeep
+tofu/aws/outputs/*
+!tofu/aws/outputs/.gitkeep
