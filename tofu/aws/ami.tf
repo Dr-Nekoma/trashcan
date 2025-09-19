@@ -15,8 +15,3 @@ data "aws_ami" "nixos_amd" {
     values = ["x86_64"]
   }
 }
-
-resource "aws_instance" "nixos_amd" {
-  ami           = data.aws_ami.nixos_amd.id
-  instance_type = var.instance_type
-}

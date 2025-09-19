@@ -1,13 +1,14 @@
 {
   lib,
   config,
+  modulesPath,
   ...
 }:
 
 let
   cfg = config.modules.disko;
-  profile_path = ../profiles/. + "/${cfg.profile}.nix";
-  profile = import profile_path;
+  disko_profile_path = ../profiles/disko. + "/${cfg.profile}.nix";
+  disko_profile = import disko_profile_path;
   inherit (lib)
     mkEnableOption
     mkIf
@@ -26,31 +27,18 @@ in
     };
   };
 
-  config = mkMerge [
-    (mkIf cfg.enable {
+  config = mkIf cfg.enable (mkMerge [
+    ({
       # Disk Setup
-      disko.devices = profile.disko.devices;
+      disko.devices = disko_profile.disko.devices;
     })
+
     (mkIf (cfg.profile == "aws") {
       # Hardware configuration
       hardware.enableRedistributableFirmware = true;
-
-      # Autologin to root
-      services.getty.autologinUser = "root";
     })
-    (mkIf (cfg.profile == "vm") {
-      # Enable QEMU guest agent
-      services.qemuGuest.enable = true;
-      # Boot configuration
-      boot.initrd.availableKernelModules = [
-        "ahci"
-        "xhci_pci"
-        "virtio_pci"
-        "sr_mod"
-        "virtio_blk"
-      ];
-      boot.kernelModules = [ ];
 
+    (mkIf (cfg.profile == "vm") {
       # This is to make sure we use the same Labels as the
       # qcow2 module from NixOS Generators.
       # https://github.com/nix-community/nixos-generators/blob/master/formats/qcow-efi.nix#L26
@@ -61,16 +49,6 @@ in
         device = mkForce "/dev/disk/by-label/ESP";
       };
       swapDevices = mkForce [ ];
-
-      # Disable automatic filesystem creation from nixos-generators
-      system.build.qemuFormatOverride = true;
-
-      # Hardware configuration
-      hardware.enableRedistributableFirmware = true;
-
-      # Autologin to root
-      services.getty.autologinUser = "root";
-      security.sudo.wheelNeedsPassword = false;
     })
-  ];
+  ]);
 }

@@ -28,13 +28,12 @@ in
       # FS setup
       fileSystems."${cfg.directory}".neededForBoot = true;
       # For testing purposes with a local VM
-      virtualisation.vmVariantWithDisko.virtualisation.fileSystems."${cfg.directory}".neededForBoot =
-        true;
+      # virtualisation.vmVariantWithDisko.virtualisation.fileSystems."${cfg.directory}".neededForBoot =
+      #   true;
       # Workaround for the following service failing with a bind mount for /etc/machine-id
       # see: https://github.com/nix-community/impermanence/issues/229
       # boot.initrd.systemd.suppressedUnits = [ "systemd-machine-id-commit.service" ];
       # systemd.suppressedSystemUnits = [ "systemd-machine-id-commit.service" ];
-      # Files to persist
       environment.persistence."${cfg.directory}" = {
         hideMounts = true;
         directories = [
@@ -42,10 +41,13 @@ in
           "/var/lib/nixos"
           "/var/lib/postgresql"
           "/var/lib/tailscale"
+          "/var/lib/secrets"
           "/var/log"
         ];
+        # Files to persist
         files = [
           "/etc/machine-id"
+          "/var/lib/id_ed25519"
         ];
         users = {
           bene = {

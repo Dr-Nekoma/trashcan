@@ -1,8 +1,8 @@
 {
   lib,
   config,
-  diskoProfile,
   hostId,
+  profile,
   ...
 }:
 {
@@ -18,11 +18,12 @@
 
   modules.common = {
     enable = true;
+    profile = profile;
   };
 
   modules.disko = {
-    enable = true;
-    profile = diskoProfile;
+    enable = false;
+    profile = profile;
   };
 
   modules.ssh = {
@@ -38,6 +39,10 @@
   };
 
   # modules.impermanence = {
+  #   enable = true;
+  # };
+
+  # modules.lyceum = {
   #   enable = true;
   # };
 

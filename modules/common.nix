@@ -11,14 +11,21 @@ let
     mkEnableOption
     mkIf
     mkMerge
+    mkOption
     ;
 in
 {
   options.modules.common = {
     enable = mkEnableOption "Common settings shared by all machines";
+    profile = mkOption {
+      type = lib.types.str;
+      default = null;
+      description = "The profile to use for the common module.";
+    };
   };
-  config = mkMerge [
-    (mkIf cfg.enable {
+
+  config = mkIf cfg.enable (mkMerge [
+    ({
       boot = {
         loader = {
           efi.canTouchEfiVariables = true;
@@ -29,6 +36,7 @@ in
       documentation.enable = false;
 
       environment.systemPackages = with pkgs; [
+        bash
         git
         pciutils
       ];
@@ -57,8 +65,6 @@ in
         optimise.automatic = true;
       };
 
-      systemd.services.nix-daemon.environment.TMPDIR = "/var/tmp";
-
       # Extra stuff
       # programs.zsh.enable = true;
       programs.neovim = {
@@ -68,7 +74,37 @@ in
       };
 
       # Don't change this!
-      system.stateVersion = "25.03";
+      system.stateVersion = "25.05";
     })
-  ];
+
+    (mkIf (cfg.profile == "aws") {
+      # Hardware configuration
+      hardware.enableRedistributableFirmware = true;
+    })
+
+    (mkIf (cfg.profile == "vm") {
+      # Enable QEMU guest agent
+      services.qemuGuest.enable = true;
+
+      # Boot configuration
+      boot.initrd.availableKernelModules = [
+        "ahci"
+        "xhci_pci"
+        "virtio_pci"
+        "sr_mod"
+        "virtio_blk"
+      ];
+      boot.kernelModules = [ ];
+
+      # Disable automatic filesystem creation from nixos-generators
+      system.build.qemuFormatOverride = true;
+
+      # Hardware configuration
+      hardware.enableRedistributableFirmware = true;
+
+      # Autologin to root
+      services.getty.autologinUser = "root";
+      security.sudo.wheelNeedsPassword = false;
+    })
+  ]);
 }
