@@ -4,7 +4,7 @@
       main = {
         type = "disk";
         device = "/dev/nvme0n1";
-        imageSize = "64G";
+        imageSize = "100G";
         content = {
           type = "gpt";
           partitions = {

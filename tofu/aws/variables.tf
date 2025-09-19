@@ -12,12 +12,6 @@ variable "instance_type" {
   nullable = false
 }
 
-variable "vm_private_ip" {
-  type    = string
-  default = "10.0.0.12"
-  nullable = false
-}
-
 variable "project" {
   type        = string
   default     = "trashcan"
@@ -36,14 +30,14 @@ variable "region" {
 variable "ami_version" {
   description = "NixOS AMI version"
   type        = string
-  default     = "25.03"
+  default     = "25.05"
   nullable = false
 }
 
 variable "flake_url" {
   description = "NixOS flake URL (either a local path or git repo)"
   type        = string
-  default     = "github:Dr-Nekoma/trashcan"
+  default     = "github:Dr-Nekoma/trashcan/25-REFACTOR-deploy"
   nullable = false
 }
 

@@ -23,6 +23,7 @@ in
           PasswordAuthentication = false;
           AllowUsers = [
             "bene"
+            "deploy"
           ];
           X11Forwarding = false;
           # "yes", "without-password", "prohibit-password", "forced-commands-only", "no"

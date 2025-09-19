@@ -31,6 +31,13 @@ in
       # Disk Setup
       disko.devices = profile.disko.devices;
     })
+    (mkIf (cfg.profile == "aws") {
+      # Hardware configuration
+      hardware.enableRedistributableFirmware = true;
+
+      # Autologin to root
+      services.getty.autologinUser = "root";
+    })
     (mkIf (cfg.profile == "vm") {
       # Enable QEMU guest agent
       services.qemuGuest.enable = true;

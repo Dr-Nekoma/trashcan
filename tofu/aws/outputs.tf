@@ -4,7 +4,7 @@ output "public_dns" {
 
 resource "local_file" "nix_output" {
   content = templatefile(
-    "${path.module}/templates/secrets.nix.tftpl",
+    "${path.module}/templates/secrets.nix.tmpl",
     { server_public_key = tls_private_key.ssh_key.public_key_openssh }
   )
   filename = "../../secrets/secrets.nix"

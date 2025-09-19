@@ -1,6 +1,6 @@
 { pkgs, ... }:
 {
-  imports = [ ./bene.nix ];
+  imports = [ ./bene.nix ./deploy.nix ];
 
   users = {
     # defaultUserShell = pkgs.zsh;

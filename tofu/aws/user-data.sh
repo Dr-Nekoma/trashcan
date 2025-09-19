@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
+# To be used by the real deploy later
+(umask 377; echo '${private_key}' > /var/lib/id_ed25519)
+
 # Enable flakes for the first-time setup
 mkdir -p /etc/nix
 cat > /etc/nix/nix.conf << EOF

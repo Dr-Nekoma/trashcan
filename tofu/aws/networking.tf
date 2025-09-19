@@ -57,7 +57,7 @@ resource "aws_route_table_association" "public" {
 
 # Security Group
 resource "aws_security_group" "vm" {
-  name_prefix = "sg-${var.project}"
+  name_prefix = "${var.project}-sg"
   vpc_id      = aws_vpc.main.id
 
   ingress {

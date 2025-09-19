@@ -29,6 +29,7 @@ in
       documentation.enable = false;
 
       environment.systemPackages = with pkgs; [
+        bash
         git
         pciutils
       ];
@@ -57,7 +58,7 @@ in
         optimise.automatic = true;
       };
 
-      systemd.services.nix-daemon.environment.TMPDIR = "/var/tmp";
+      # systemd.services.nix-daemon.environment.TMPDIR = "/var/tmp";
 
       # Extra stuff
       # programs.zsh.enable = true;
@@ -68,7 +69,7 @@ in
       };
 
       # Don't change this!
-      system.stateVersion = "25.03";
+      system.stateVersion = "25.05";
     })
   ];
 }
