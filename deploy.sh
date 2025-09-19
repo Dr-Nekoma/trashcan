@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-TARGET_FLAKE="nekoma"
+TARGET_FLAKE="bootstrap"
 TARGET_HOST=""
 
 DIR="$(pwd)/tofu/aws/outputs"

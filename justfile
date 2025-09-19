@@ -5,6 +5,7 @@ hosts_dir := justfile_directory() + "/hosts"
 keys_dir := justfile_directory() + "/keys"
 modules_dir := justfile_directory() + "/modules"
 tofu_dir := justfile_directory() + "/tofu/aws"
+secrets_dir := justfile_directory() + "/secrets"
 
 target_vm := env_var_or_default("TARGET_VM", "bootstrap")
 target_flake := env_var_or_default("TARGET_FLAKE", "bootstrap")
@@ -46,27 +47,23 @@ run-qemu:
 # ----------------------------
 # Resets the agenix file
 rekey:
-    cd secrets && nix run github:ryantm/agenix -- -r
+    cd {{secrets_dir}} && nix run github:ryantm/agenix -- -r
 
 # ----------------------------
 # OpenTofu Commands
 # ----------------------------
 # Initializes the tofu dir
 init:
-    cd {{tofu_dir}}
-    tofu init
+    cd {{tofu_dir}} && tofu init
 
 # Plan infra changes
 plan:
-    cd {{tofu_dir}}
-    tofu plan -out tfplan
+    cd {{tofu_dir}} && tofu plan -out tfplan
 
 # Provision infra changes
 apply:
-    cd {{tofu_dir}}
-    tofu apply "tfplan"
+    cd {{tofu_dir}} && tofu apply "tfplan"
 
 # Destroy infra
 destroy:
-    cd {{tofu_dir}}
-    tofu apply -destroy -auto-approve
+    cd {{tofu_dir}} && tofu apply -destroy -auto-approve
