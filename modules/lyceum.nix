@@ -26,7 +26,7 @@ in
         # https://github.com/Dr-Nekoma/lyceum/issues/66
         firewall = {
           allowedTCPPorts = [ 4369 ];
-          allowedUTPPorts = [ 4369 ];
+          allowedUDPPorts = [ 4369 ];
         };
       };
     })

@@ -29,21 +29,16 @@ resource "aws_key_pair" "ssh_key" {
 resource "aws_instance" "vm" {
   ami                         = data.aws_ami.nixos_amd.id
   key_name                    = aws_key_pair.ssh_key.key_name
-  instance_type = var.instance_type
+  instance_type               = var.instance_type
   associate_public_ip_address = false
   subnet_id                   = aws_subnet.public.id
   vpc_security_group_ids      = [aws_security_group.vm.id]
 
-  user_data_base64 = base64encode(templatefile("${path.module}/user-data.sh", {
-    flake_url = var.flake_url,
-    flake_system = var.flake_system,
-    private_key = tls_private_key.ssh_key.private_key_openssh
-  }))
-
   user_data = <<-EOF
     #!/usr/bin/env bash
-    (umask 377; echo '${tls_private_key.ssh_key.private_key_openssh}' > /var/lib/id_ed25519)
+    (umask 377; echo '${tls_private_key.ssh_key.private_key_openssh}' > /var/lib/secrets/id_ed25519)
 
+    # Enable Flakes as soon as as possible
     mkdir -p /etc/nix
     cat > /etc/nix/nix.conf << EOL
     experimental-features = nix-command flakes
@@ -51,15 +46,6 @@ resource "aws_instance" "vm" {
 
     systemctl restart nix-daemon
     sleep 30
-
-    nix shell nixpkgs#git
-    echo "Deploying NixOS configuration from flake: ${var.flake_url}#${var.flake_system}"
-    nixos-rebuild switch --flake "${var.flake_url}#${var.flake_system}" --show-trace
-
-    systemctl enable sshd
-    systemctl start sshd
-
-    echo "NixOS deployment complete!"
   EOF
 
   root_block_device {
@@ -71,6 +57,48 @@ resource "aws_instance" "vm" {
     Category = "vm"
     Project  = "trashcan"
   }
+}
+
+# Elastic IP
+resource "aws_eip" "eip" {
+  domain     = "vpc"
+  instance   = aws_instance.vm.id
+  depends_on = [aws_internet_gateway.main]
+
+  tags = {
+    Category = "ip"
+    Project  = "trashcan"
+  }
+}
+
+# This ensures that the instance is reachable via `ssh` before we deploy NixOS
+resource "null_resource" "wait" {
+  provisioner "remote-exec" {
+    connection {
+      host        = aws_eip.eip.public_ip
+      private_key = tls_private_key.ssh_key.private_key_openssh
+    }
+
+    inline = [":"] # Do nothing; we're just testing SSH connectivity
+  }
+}
+
+# Now install the first bootstrap flake
+module "nixos_anywhere" {
+  source                 = "github.com/nix-community/nixos-anywhere//terraform/all-in-one"
+  nixos_system_attr      = "${var.flake_path}#nixosConfigurations.${var.flake_system}.config.system.build.toplevel"
+  nixos_partitioner_attr = "${var.flake_path}#nixosConfigurations.${var.flake_system}.config.system.build.diskoScript"
+  deployment_ssh_key     = tls_private_key.ssh_key.private_key_openssh
+  instance_id            = aws_eip.eip.public_ip
+  target_host            = aws_eip.eip.public_ip
+
+  # Useful on first time setups and debugging
+  debug_logging = true
+
+  depends_on = [
+    aws_instance.vm,
+    null_resource.wait
+  ]
 }
 
 # module "deploy" {
@@ -97,14 +125,3 @@ resource "aws_instance" "vm" {
 #   depends_on = [aws_instance.vm]
 # }
 
-# Elastic IP
-resource "aws_eip" "eip" {
-  domain     = "vpc"
-  instance   = aws_instance.vm.id
-  depends_on = [aws_internet_gateway.main]
-
-  tags = {
-    Category = "ip"
-    Project  = "trashcan"
-  }
-}

@@ -66,7 +66,7 @@ in
       age = {
         identityPaths = [
           "/etc/agenix/server_ssh"
-          "/var/lib/id_ed25519"
+          "/var/lib/secrets/id_ed25519"
         ];
       };
 
@@ -75,7 +75,7 @@ in
         hostKeys = [
           {
             type = "ed25519";
-            path = "/var/lib/id_ed25519";
+            path = "/var/lib/secrets/id_ed25519";
           }
         ];
       };

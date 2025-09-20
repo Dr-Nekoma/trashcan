@@ -1,6 +1,7 @@
 {
   lib,
   config,
+  modulesPath,
   ...
 }:
 
@@ -32,11 +33,10 @@ in
       disko.devices = profile.disko.devices;
     })
     (mkIf (cfg.profile == "aws") {
+      # imports = [ "${modulesPath}/virtualisation/amazon-image.nix" ];
+
       # Hardware configuration
       hardware.enableRedistributableFirmware = true;
-
-      # Autologin to root
-      services.getty.autologinUser = "root";
     })
     (mkIf (cfg.profile == "vm") {
       # Enable QEMU guest agent
