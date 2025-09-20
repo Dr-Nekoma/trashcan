@@ -91,6 +91,17 @@ module "nixos_anywhere" {
   deployment_ssh_key     = tls_private_key.ssh_key.private_key_openssh
   instance_id            = aws_eip.eip.public_ip
   target_host            = aws_eip.eip.public_ip
+  extra_files_script = <<-EOF
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    mkdir -p etc/ssh/authorized_keys.d
+    printf "%s" "${var.sshKeys}" > etc/ssh/authorized_keys.d/root
+    printf "%s" "${var.sshKeys}" > etc/ssh/authorized_keys.d/patrick
+    chmod 755 etc/ssh/authorized_keys.d
+    chmod 600 etc/ssh/authorized_keys.d/root
+    chmod 600 etc/ssh/authorized_keys.d/deploy
+  EOF
 
   # Useful on first time setups and debugging
   debug_logging = true
@@ -100,28 +111,3 @@ module "nixos_anywhere" {
     null_resource.wait
   ]
 }
-
-# module "deploy" {
-#   source = "github.com/nix-community/nixos-anywhere//terraform/all-in-one"
-#   
-#   nixos_system_attr = ".#nixosConfigurations.${var.flake_system}.config.system.build.toplevel"
-#   nixos_partitioner_attr = ".#nixosConfigurations.hetzner-cloud.config.system.build.disko"
-#   target_host = hcloud_server.nixos.ipv4_address
-#   instance_id = hcloud_server.nixos.id
-#   debug_logging = true
-#
-#   extra_files_script = <<-EOT
-#     #!/usr/bin/env bash
-#     set -euo pipefail
-#     
-#     mkdir -p etc/ssh/authorized_keys.d
-#     printf "%s" "${var.sshKeys}" > etc/ssh/authorized_keys.d/root
-#     printf "%s" "${var.sshKeys}" > etc/ssh/authorized_keys.d/patrick
-#     chmod 755 etc/ssh/authorized_keys.d
-#     chmod 600 etc/ssh/authorized_keys.d/root
-#     chmod 600 etc/ssh/authorized_keys.d/patrick
-#   EOT
-#
-#   depends_on = [aws_instance.vm]
-# }
-
