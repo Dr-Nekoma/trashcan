@@ -34,7 +34,6 @@ in
       # see: https://github.com/nix-community/impermanence/issues/229
       # boot.initrd.systemd.suppressedUnits = [ "systemd-machine-id-commit.service" ];
       # systemd.suppressedSystemUnits = [ "systemd-machine-id-commit.service" ];
-      # Files to persist
       environment.persistence."${cfg.directory}" = {
         hideMounts = true;
         directories = [
@@ -44,8 +43,10 @@ in
           "/var/lib/tailscale"
           "/var/log"
         ];
+        # Files to persist
         files = [
           "/etc/machine-id"
+          "/var/lib/id_ed25519"
         ];
         users = {
           bene = {

@@ -1,6 +1,7 @@
 {
   lib,
   config,
+  modulesPath,
   ...
 }:
 
@@ -30,6 +31,12 @@ in
     (mkIf cfg.enable {
       # Disk Setup
       disko.devices = profile.disko.devices;
+    })
+    (mkIf (cfg.profile == "aws") {
+      imports = [ "${modulesPath}/virtualisation/amazon-image.nix" ];
+
+      # Hardware configuration
+      hardware.enableRedistributableFirmware = true;
     })
     (mkIf (cfg.profile == "vm") {
       # Enable QEMU guest agent

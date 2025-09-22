@@ -52,6 +52,7 @@ in
         ];
         settings = {
           shared_preload_libraries = "pg_stat_statements";
+          wal_level = "logical";
           # pg_stat_statements config, nested attr sets need to be
           # converted to strings, otherwise postgresql.conf fails
           # to be generated.

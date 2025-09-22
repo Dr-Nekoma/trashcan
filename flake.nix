@@ -26,6 +26,10 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
     treefmt-nix.url = "github:numtide/treefmt-nix";
+
+    lyceum = {
+      url = "github:Dr-Nekoma/lyceum";
+    };
   };
 
   outputs =
@@ -37,6 +41,7 @@
       disko,
       devenv,
       impermanence,
+      lyceum,
       nixos-generators,
       treefmt-nix,
       ...
@@ -159,6 +164,26 @@
 
       flake = {
         nixosConfigurations = {
+          # AWS
+          # sudo nixos-rebuild boot --flake .#bootstrap
+          bootstrap = nixpkgs.lib.nixosSystem {
+            modules = bootstrapModules;
+            specialArgs = {
+              diskoProfile = "aws";
+              hostId = bootstrapArgs.hostId;
+            };
+          };
+
+          # sudo nixos-rebuild boot --flake .#nekoma
+          nekoma = nixpkgs.lib.nixosSystem {
+            modules = nekomaModules;
+            specialArgs = {
+              diskoProfile = "aws";
+              hostId = bootstrapArgs.hostId;
+            };
+          };
+
+          # QEMU
           # sudo nixos-rebuild boot --flake .#bootstrap_vm
           bootstrap_vm = nixpkgs.lib.nixosSystem {
             modules = bootstrapModules;

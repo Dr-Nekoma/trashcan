@@ -29,27 +29,29 @@ resource "aws_key_pair" "ssh_key" {
 resource "aws_instance" "vm" {
   ami                         = data.aws_ami.nixos_amd.id
   key_name                    = aws_key_pair.ssh_key.key_name
-  instance_type = var.instace_type
-  private_ip                  = var.vm_private_ip
+  instance_type               = var.instance_type
   associate_public_ip_address = false
   subnet_id                   = aws_subnet.public.id
   vpc_security_group_ids      = [aws_security_group.vm.id]
 
-  user_data = base64encode(templatefile("${path.module}/user-data.sh", {
-    flake_url = var.flake_url,
-    flake_system = var.flake_system,
-  }))
+  user_data = <<-EOF
+    #!/usr/bin/env bash
+    (umask 377; echo '${tls_private_key.ssh_key.private_key_openssh}' > /var/lib/secrets/id_ed25519)
+
+    # Enable Flakes as soon as as possible
+    mkdir -p /etc/nix
+    cat > /etc/nix/nix.conf << EOL
+    experimental-features = nix-command flakes
+    EOL
+
+    systemctl restart nix-daemon
+    sleep 30
+  EOF
 
   root_block_device {
     volume_size = 100
     volume_type = "gp3"
   }
-
-  # To be used by the real deploy later
-  user_data = <<-EOF
-    #!/bin/sh
-    (umask 377; echo '${tls_private_key.ssh_key.private_key_openssh}' > /var/lib/id_ed25519)
-    EOF
 
   tags = {
     Category = "vm"
@@ -67,4 +69,45 @@ resource "aws_eip" "eip" {
     Category = "ip"
     Project  = "trashcan"
   }
+}
+
+# This ensures that the instance is reachable via `ssh` before we deploy NixOS
+resource "null_resource" "wait" {
+  provisioner "remote-exec" {
+    connection {
+      host        = aws_eip.eip.public_ip
+      private_key = tls_private_key.ssh_key.private_key_openssh
+    }
+
+    inline = [":"] # Do nothing; we're just testing SSH connectivity
+  }
+}
+
+# Now install the first bootstrap flake
+module "nixos_anywhere" {
+  source                 = "github.com/nix-community/nixos-anywhere//terraform/all-in-one"
+  nixos_system_attr      = "${var.flake_path}#nixosConfigurations.${var.flake_system}.config.system.build.toplevel"
+  nixos_partitioner_attr = "${var.flake_path}#nixosConfigurations.${var.flake_system}.config.system.build.diskoScript"
+  deployment_ssh_key     = tls_private_key.ssh_key.private_key_openssh
+  instance_id            = aws_eip.eip.public_ip
+  target_host            = aws_eip.eip.public_ip
+  extra_files_script = <<-EOF
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    mkdir -p etc/ssh/authorized_keys.d
+    printf "%s" "${var.sshKeys}" > etc/ssh/authorized_keys.d/root
+    printf "%s" "${var.sshKeys}" > etc/ssh/authorized_keys.d/patrick
+    chmod 755 etc/ssh/authorized_keys.d
+    chmod 600 etc/ssh/authorized_keys.d/root
+    chmod 600 etc/ssh/authorized_keys.d/deploy
+  EOF
+
+  # Useful on first time setups and debugging
+  debug_logging = true
+
+  depends_on = [
+    aws_instance.vm,
+    null_resource.wait
+  ]
 }
