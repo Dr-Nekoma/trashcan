@@ -105,6 +105,11 @@ in
       # Autologin to root
       services.getty.autologinUser = "root";
       security.sudo.wheelNeedsPassword = false;
+
+      # Redirect port 22 to 2222 on host
+      virtualisation.forwardPorts = [
+        { from = "host"; host.port = 2222; guest.port = 22; }
+      ];
     })
   ]);
 }
