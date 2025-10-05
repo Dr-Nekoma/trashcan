@@ -36,13 +36,31 @@ If you dont have any keys setup already:
 *** Qemu VM
 
 #+begin_src shell
-  nix build .#qcow
+  nix build .#qemu
   # Followed by
   nix run .#qemu
 #+end_src
 
+When inside the VM, check if a few services are running fine:
+
 #+begin_src shell
-  journalctl -xau postgresql
+  systemctl status sshd.service
+#+end_src
+
+Add the following to your ~$HOME/.ssh/config~:
+
+#+begin_src shell
+  Host nixos_vm
+    HostName 127.0.0.1
+    Port 2222
+    User your_user
+    IdentityFile your_key
+#+end_src
+
+then try to login:
+
+#+begin_src shell
+  ssh nixos_vm
 #+end_src
 
 *** Custom ISO 

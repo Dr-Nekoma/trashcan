@@ -69,3 +69,12 @@ apply:
 # Destroy infra
 destroy:
     cd {{ tofu_dir }} && tofu apply -destroy -auto-approve
+
+# ----------------------------
+# Deploy Commands
+# ----------------------------
+deploy_vm:
+    nix run nixpkgs#nixos-rebuild boot -- \
+        --flake ".#nekoma_vm" \
+        --target-host "nixos_vm" \
+        --fast --use-remote-sudo

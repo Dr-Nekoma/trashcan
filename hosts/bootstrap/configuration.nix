@@ -26,9 +26,9 @@
     profile = profile;
   };
 
-  # modules.impermanence = {
-  #   enable = true;
-  # };
+  modules.impermanence = {
+    enable = false;
+  };
 
   modules.ssh = {
     enable = true;

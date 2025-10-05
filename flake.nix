@@ -135,7 +135,7 @@
 
           # nix develop
           devShells = {
-            # `nix develop --impure`
+            # nix develop --impure
             default = devenv.lib.mkShell {
               inherit inputs pkgs;
               modules = [

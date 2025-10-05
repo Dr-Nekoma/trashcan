@@ -3,7 +3,7 @@
     disk = {
       main = {
         type = "disk";
-        device = "/dev/nvme0n1";
+        device = "/dev/vda";
         imageSize = "64G";
         content = {
           type = "gpt";

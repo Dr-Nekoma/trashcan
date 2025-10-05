@@ -22,7 +22,7 @@
   };
 
   modules.disko = {
-    enable = false;
+    enable = true;
     profile = profile;
   };
 
@@ -30,9 +30,9 @@
     enable = true;
   };
 
-  modules.secrets = {
-    enable = true;
-  };
+  # modules.secrets = {
+  #   enable = true;
+  # };
 
   modules.postgresql = {
     enable = true;
