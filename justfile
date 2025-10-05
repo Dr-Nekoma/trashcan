@@ -72,9 +72,17 @@ destroy:
 
 # ----------------------------
 # Deploy Commands
+
 # ----------------------------
-deploy_vm:
+bootstrap_vm:
     nix run nixpkgs#nixos-rebuild boot -- \
         --flake ".#nekoma_vm" \
         --target-host "nixos_vm" \
+        --install-bootloader \
+        --fast --use-remote-sudo
+deploy_vm:
+    nix run nixpkgs#nixos-rebuild switch -- \
+        --flake ".#nekoma_vm" \
+        --target-host "nixos_vm" \
+        --install-bootloader \
         --fast --use-remote-sudo

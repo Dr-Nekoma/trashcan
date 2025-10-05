@@ -16,6 +16,18 @@
   # head -c4 /dev/urandom | od -A none -t x4
   networking.hostId = hostId;
 
+  # ZFS support
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+  boot.supportedFilesystems = [ "zfs" ];
+  boot.zfs.forceImportRoot = false;
+
+  fileSystems."/" = lib.mkForce {
+    device = "tank/root";
+    fsType = "zfs";
+    options = [ "zfsutil" ];
+  };
+
   modules.common = {
     enable = true;
     profile = profile;
@@ -26,25 +38,25 @@
     profile = profile;
   };
 
-  modules.ssh = {
-    enable = true;
+  modules.impermanence = {
+    enable = false;
   };
-
-  # modules.secrets = {
-  #   enable = true;
-  # };
 
   modules.postgresql = {
     enable = true;
   };
 
-  # modules.impermanence = {
-  #   enable = true;
-  # };
+  modules.ssh = {
+    enable = true;
+  };
 
-  # modules.lyceum = {
-  #   enable = true;
-  # };
+  modules.secrets = {
+    enable = false;
+  };
+
+  modules.lyceum = {
+    enable = false;
+  };
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 }
