@@ -101,3 +101,4 @@ keys/*
 !keys/.gitkeep
 tofu/aws/outputs/*
 !tofu/aws/outputs/.gitkeep
+mg_cli

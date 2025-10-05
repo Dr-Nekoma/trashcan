@@ -14,8 +14,8 @@ in
     enable = mkEnableOption "Enable/Disable custom SSH options";
   };
 
-  config = mkMerge [
-    (mkIf cfg.enable {
+  config = mkIf cfg.enable (mkMerge [
+    ({
       services.openssh = {
         enable = true;
         ports = [ 22 ];
@@ -23,6 +23,7 @@ in
           PasswordAuthentication = false;
           AllowUsers = [
             "bene"
+            "deploy"
           ];
           X11Forwarding = false;
           # "yes", "without-password", "prohibit-password", "forced-commands-only", "no"
@@ -46,5 +47,5 @@ in
         ];
       };
     })
-  ];
+  ]);
 }

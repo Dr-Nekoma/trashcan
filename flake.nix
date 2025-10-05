@@ -26,6 +26,10 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
     treefmt-nix.url = "github:numtide/treefmt-nix";
+
+    lyceum = {
+      url = "github:Dr-Nekoma/lyceum";
+    };
   };
 
   outputs =
@@ -37,21 +41,23 @@
       disko,
       devenv,
       impermanence,
+      lyceum,
       nixos-generators,
       treefmt-nix,
       ...
     }:
     let
+      bootstrapArgs = {
+        hostId = "41d2315f";
+        profile = "vm";
+      };
+
       bootstrapModules = [
         agenix.nixosModules.default
         disko.nixosModules.disko
         impermanence.nixosModules.impermanence
         ./hosts/bootstrap/configuration.nix
       ];
-      bootstrapArgs = {
-        diskoProfile = "vm";
-        hostId = "41d2315f";
-      };
 
       nekomaModules = [
         agenix.nixosModules.default
@@ -129,7 +135,7 @@
 
           # nix develop
           devShells = {
-            # `nix develop --impure`
+            # nix develop --impure
             default = devenv.lib.mkShell {
               inherit inputs pkgs;
               modules = [
@@ -147,6 +153,11 @@
                     languages.opentofu = {
                       enable = true;
                     };
+
+                    enterShell = ''
+                      Adding mg_cli to $PATH
+                      export PATH="$(pwd)/mg_cli:$PATH"
+                    '';
                   }
                 )
               ];
@@ -159,6 +170,26 @@
 
       flake = {
         nixosConfigurations = {
+          # AWS
+          # sudo nixos-rebuild boot --flake .#bootstrap
+          bootstrap = nixpkgs.lib.nixosSystem {
+            modules = bootstrapModules;
+            specialArgs = {
+              hostId = bootstrapArgs.hostId;
+              profile = "aws";
+            };
+          };
+
+          # sudo nixos-rebuild boot --flake .#nekoma
+          nekoma = nixpkgs.lib.nixosSystem {
+            modules = nekomaModules;
+            specialArgs = {
+              hostId = bootstrapArgs.hostId;
+              profile = "aws";
+            };
+          };
+
+          # QEMU
           # sudo nixos-rebuild boot --flake .#bootstrap_vm
           bootstrap_vm = nixpkgs.lib.nixosSystem {
             modules = bootstrapModules;
@@ -168,10 +199,7 @@
           # sudo nixos-rebuild boot --flake .#nekoma_vm
           nekoma_vm = nixpkgs.lib.nixosSystem {
             modules = nekomaModules;
-            specialArgs = {
-              diskoProfile = "vm";
-              hostId = bootstrapArgs.hostId;
-            };
+            specialArgs = bootstrapArgs;
           };
         };
       };

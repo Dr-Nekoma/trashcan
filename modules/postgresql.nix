@@ -20,8 +20,8 @@ in
     enable = mkEnableOption "Enable/Disable custom PostgreSQL options";
   };
 
-  config = mkMerge [
-    (mkIf cfg.enable {
+  config = mkIf cfg.enable (mkMerge [
+    ({
       environment.systemPackages = with pkgs; [
         barman
       ];
@@ -41,17 +41,10 @@ in
               createrole = true;
             };
           }
-
-          {
-            name = "migrations";
-            ensureClauses = {
-              login = true;
-              createrole = true;
-            };
-          }
         ];
         settings = {
           shared_preload_libraries = "pg_stat_statements";
+          wal_level = "logical";
           # pg_stat_statements config, nested attr sets need to be
           # converted to strings, otherwise postgresql.conf fails
           # to be generated.
@@ -125,5 +118,5 @@ in
       #     EOF
       #   '';
     })
-  ];
+  ]);
 }

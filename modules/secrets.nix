@@ -16,8 +16,8 @@ in
     enable = mkEnableOption "Enable/Disable Agenix Secrets";
   };
 
-  config = mkMerge [
-    (mkIf cfg.enable {
+  config = mkIf cfg.enable (mkMerge [
+    ({
       # Agenix setup
       age = {
         secrets = {
@@ -37,19 +37,6 @@ in
           }
         ];
       };
-    })
-
-    # Only run this for local VM builds
-    (mkIf (disko_module.profile == "vm") {
-      # SSH
-      # services.openssh = {
-      #   hostKeys = [
-      #     {
-      #       type = "ed25519";
-      #       path = config.age.secrets.server_ssh.path;
-      #     }
-      #   ];
-      # };
     })
 
     # Impermance-based configs
@@ -73,17 +60,25 @@ in
         ];
       };
     })
-    # Otherwise
-    (mkIf (!impermanence_module.enable) {
+    # Otherwise (with AWS)
+    (mkIf (!impermanence_module.enable && disko_module.profile == "aws") {
       # Age
       age = {
         identityPaths = [
           "/etc/agenix/server_ssh"
+          "/var/lib/secrets/id_ed25519"
         ];
       };
-      virtualisation.vmVariantWithDisko.agenix.age.sshKeyPaths = [
-        "/etc/agenix/server_ssh"
-      ];
+
+      # SSH
+      services.openssh = {
+        hostKeys = [
+          {
+            type = "ed25519";
+            path = "/var/lib/secrets/id_ed25519";
+          }
+        ];
+      };
     })
 
     # If the PostgreSQL module is enabled as well
@@ -109,5 +104,6 @@ in
         };
       };
     })
-  ];
+
+  ]);
 }
