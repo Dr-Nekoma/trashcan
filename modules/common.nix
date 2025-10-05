@@ -27,9 +27,6 @@ in
   config = mkIf cfg.enable (mkMerge [
     ({
       boot = {
-        loader = {
-          efi.canTouchEfiVariables = true;
-        };
         tmp.cleanOnBoot = true;
       };
 
@@ -78,6 +75,12 @@ in
     })
 
     (mkIf (cfg.profile == "aws") {
+      boot = {
+        loader = {
+          efi.canTouchEfiVariables = true;
+        };
+      };
+
       # Hardware configuration
       hardware.enableRedistributableFirmware = true;
     })

@@ -22,7 +22,7 @@
   };
 
   modules.disko = {
-    enable = false;
+    enable = true;
     profile = profile;
   };
 

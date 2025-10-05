@@ -28,24 +28,21 @@ default:
 build:
     nix build ".#nixosConfigurations.{{ target_vm }}.config.system.build.toplevel"
 
+# Builds a custom ISO with the bootstrap configuration
 build-iso:
     nix build ".#iso"
 
+# Builds the QEMU VM
 build-qemu:
-    nix build ".#qemu"
+    nix build ".#nixosConfigurations.{{ target_vm }}_vm.config.system.build.vm"
 
 # Loads the current Flake into a REPL
 repl:
     nix repl "#nixosConfigurations.{{ target_flake }}"
 
-# Runs a Qemu VM, to quickly test changes
-run-qemu:
-    nix run ".#qemu"
-
 # ----------------------------
 # Age-related Commands
 # ----------------------------
-
 # Resets the agenix file
 rekey:
     cd {{ secrets_dir }} && nix run github:ryantm/agenix -- -r
@@ -53,7 +50,6 @@ rekey:
 # ----------------------------
 # OpenTofu Commands
 # ----------------------------
-
 # Initializes the tofu dir
 init:
     cd {{ tofu_dir }} && tofu init
@@ -72,7 +68,6 @@ destroy:
 
 # ----------------------------
 # Deploy Commands
-
 # ----------------------------
 bootstrap_vm:
     nix run nixpkgs#nixos-rebuild boot -- \
@@ -80,9 +75,19 @@ bootstrap_vm:
         --target-host "nixos_vm" \
         --install-bootloader \
         --fast --use-remote-sudo
+    export QEMU_NET_OPTS="user,id=net0,hostfwd=tcp::2222-:22"
+    result/bin/run-nixos-vm
+
 deploy_vm:
-    nix run nixpkgs#nixos-rebuild switch -- \
+    nix run nixpkgs#nixos-rebuild boot -- \
         --flake ".#nekoma_vm" \
         --target-host "nixos_vm" \
-        --install-bootloader \
         --fast --use-remote-sudo
+
+# ----------------------------
+# VM Commands
+# ----------------------------
+# Runs the QEMU VM
+run: build-qemu
+    export QEMU_NET_OPTS="user,id=net0,hostfwd=tcp::2222-:22"
+    result/bin/run-nixos-vm

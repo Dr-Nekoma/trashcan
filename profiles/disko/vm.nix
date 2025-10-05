@@ -3,72 +3,80 @@
     disk = {
       main = {
         type = "disk";
-        device = "/dev/sda";
-        imageSize = "32G";
+        device = "/dev/vda";
+        imageSize = "64G";
         content = {
           type = "gpt";
           partitions = {
             boot = {
+              size = "1M";
+              type = "EF02";
+              priority = 1;
+            };
+            esp = {
               size = "512M";
               type = "EF00";
+              label = "ESP";
               content = {
                 type = "filesystem";
                 format = "vfat";
                 mountpoint = "/boot";
-                mountOptions = [ "umask=0077" ];
+                mountOptions = [
+                  "defaults"
+                  "umask=0077"
+                ];
               };
             };
-            zfs = {
-              end = "-4G";
-              content = {
-                type = "zfs";
-                pool = "tank";
-              };
-            };
-            swap = {
+            primary = {
               size = "100%";
+              label = "nixos";
               content = {
-                type = "swap";
-                discardPolicy = "both";
+                type = "lvm_pv";
+                vg = "pool";
               };
             };
           };
         };
       };
     };
-    zpool = {
-      tank = {
-        type = "zpool";
-        rootFsOptions = {
-          compression = "zstd";
-          mountpoint = "none";
-        };
-        
-        datasets = {
-          root = {
-            type = "zfs_fs";
-            options = {
-              mountpoint = "legacy";
+
+    lvm_vg = {
+      pool = {
+        type = "lvm_vg";
+        lvs = {
+          home = {
+            size = "100%FREE";
+            content = {
+              type = "filesystem";
+              format = "ext4";
+              mountpoint = "/home";
             };
-            mountpoint = "/";
           };
+
           nix = {
-            type = "zfs_fs";
-            options = {
-              mountpoint = "legacy";
+            size = "30G";
+            content = {
+              type = "filesystem";
+              format = "ext4";
+              mountpoint = "/nix";
+              mountOptions = [
+                "defaults"
+              ];
             };
-            mountpoint = "/nix";
           };
+
           persist = {
-            type = "zfs_fs";
-            options = {
-              mountpoint = "legacy";
+            size = "20G";
+            content = {
+              type = "filesystem";
+              format = "ext4";
+              mountpoint = "/keep";
+              mountOptions = [
+                "defaults"
+              ];
             };
-            mountpoint = "/persist";
           };
         };
-        
-        postCreateHook = "zfs snapshot -r tank@blank && zfs hold -r blank tank@blank";
       };
     };
   };
