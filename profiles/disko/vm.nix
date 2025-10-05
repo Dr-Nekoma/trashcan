@@ -44,17 +44,17 @@
       pool = {
         type = "lvm_vg";
         lvs = {
-          home = {
-            size = "100%FREE";
+          root = {
+            size = "10%";
             content = {
               type = "filesystem";
               format = "ext4";
-              mountpoint = "/home";
+              mountpoint = "/";
             };
           };
 
           nix = {
-            size = "30G";
+            size = "45%";
             content = {
               type = "filesystem";
               format = "ext4";
@@ -66,7 +66,7 @@
           };
 
           persist = {
-            size = "20G";
+            size = "35%";
             content = {
               type = "filesystem";
               format = "ext4";
@@ -74,6 +74,15 @@
               mountOptions = [
                 "defaults"
               ];
+            };
+          };
+
+          home = {
+            size = "100%FREE";
+            content = {
+              type = "filesystem";
+              format = "ext4";
+              mountpoint = "/home";
             };
           };
         };

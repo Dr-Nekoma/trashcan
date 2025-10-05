@@ -19,14 +19,14 @@
   # ZFS support
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.supportedFilesystems = [ "zfs" ];
-  boot.zfs.forceImportRoot = false;
-
-  fileSystems."/" = lib.mkForce {
-    device = "tank/root";
-    fsType = "zfs";
-    options = [ "zfsutil" ];
-  };
+  # boot.supportedFilesystems = [ "zfs" ];
+  # boot.zfs.forceImportRoot = false;
+  #
+  # fileSystems."/" = lib.mkForce {
+  #   device = "tank/root";
+  #   fsType = "zfs";
+  #   options = [ "zfsutil" ];
+  # };
 
   modules.common = {
     enable = true;
@@ -51,7 +51,7 @@
   };
 
   modules.secrets = {
-    enable = false;
+    enable = true;
   };
 
   modules.lyceum = {

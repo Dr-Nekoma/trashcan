@@ -36,9 +36,7 @@ If you dont have any keys setup already:
 *** Qemu VM
 
 #+begin_src shell
-  nix build .#qemu
-  # Followed by
-  nix run .#qemu
+  just run
 #+end_src
 
 When inside the VM, check if a few services are running fine:
@@ -53,6 +51,7 @@ Add the following to your ~$HOME/.ssh/config~:
   Host nixos_vm
     HostName 127.0.0.1
     Port 2222
+    StrictHostKeyChecking no
     User your_user
     IdentityFile your_key
 #+end_src
