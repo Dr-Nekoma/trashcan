@@ -1,8 +1,8 @@
 {
   lib,
   config,
-  diskoProfile,
   hostId,
+  profile,
   ...
 }:
 {
@@ -15,14 +15,24 @@
   # https://search.nixos.org/options?channel=unstable&show=networking.hostId&query=networking.hostId
   # head -c4 /dev/urandom | od -A none -t x4
   networking.hostId = hostId;
+  boot.loader.systemd-boot.enable = true;
 
   modules.common = {
     enable = true;
+    profile = profile;
   };
 
   modules.disko = {
     enable = true;
-    profile = diskoProfile;
+    profile = profile;
+  };
+
+  modules.impermanence = {
+    enable = false;
+  };
+
+  modules.postgresql = {
+    enable = true;
   };
 
   modules.ssh = {
@@ -33,13 +43,9 @@
     enable = true;
   };
 
-  modules.postgresql = {
-    enable = true;
+  modules.lyceum = {
+    enable = false;
   };
-
-  # modules.impermanence = {
-  #   enable = true;
-  # };
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 }

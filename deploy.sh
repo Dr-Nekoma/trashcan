@@ -2,8 +2,11 @@
 
 set -euo pipefail
 
-TARGET_FLAKE=""
+TARGET_FLAKE="bootstrap"
 TARGET_HOST=""
+
+DIR="$(pwd)/tofu/aws/outputs"
+OUT_FILE="$DIR/output.json"
 
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
@@ -22,21 +25,18 @@ while [[ "$#" -gt 0 ]]; do
     esac
 done
 
-if [[ -z "$TARGET_FLAKE" ]]; then
-    echo "Usage: $0 --target-flake <flake> --target-host <host>"
-    exit 1
-fi
-
 if [[ -z "$TARGET_HOST" ]]; then
-    if [[ -f ./output.json ]]; then
-        TARGET_HOST=$(cat output.json | jq --raw-output '.public_dns')
+    if [[ -f "$OUT_FILE" ]]; then
+        TARGET_HOST=$(jq --raw-output '.public_dns' "$OUT_FILE")
     else
         echo "Usage: $0 --target-flake <flake> --target-host <host>"
         exit 1
     fi
 fi
 
-nix run nixpkgs#nixos-rebuild switch -- \
-    --flake "$TARGET_FLAKE" \
-    --target-host "deploy@$TARGET_HOST" \
+echo "DEPLOYING FLAKE=$TARGET_FLAKE to TARGET=$TARGET_HOST"
+
+nix run nixpkgs#nixos-rebuild boot -- \
+    --flake ".#$TARGET_FLAKE" \
+    --target-host "root@nixos" \
     --fast --use-remote-sudo
