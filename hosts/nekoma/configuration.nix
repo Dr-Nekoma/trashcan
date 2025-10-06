@@ -15,18 +15,7 @@
   # https://search.nixos.org/options?channel=unstable&show=networking.hostId&query=networking.hostId
   # head -c4 /dev/urandom | od -A none -t x4
   networking.hostId = hostId;
-
-  # ZFS support
   boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
-  # boot.supportedFilesystems = [ "zfs" ];
-  # boot.zfs.forceImportRoot = false;
-  #
-  # fileSystems."/" = lib.mkForce {
-  #   device = "tank/root";
-  #   fsType = "zfs";
-  #   options = [ "zfsutil" ];
-  # };
 
   modules.common = {
     enable = true;
