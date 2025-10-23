@@ -43,6 +43,7 @@ in
         hideMounts = true;
         directories = [
           "/etc/NetworkManager/system-connections"
+          "/etc/ssh"
           "/var/lib/nixos"
           "/var/lib/postgresql"
           "/var/lib/tailscale"

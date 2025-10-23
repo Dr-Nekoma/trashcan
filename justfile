@@ -43,6 +43,7 @@ repl:
 # ----------------------------
 # Age-related Commands
 # ----------------------------
+
 # Resets the agenix file
 rekey:
     cd {{ secrets_dir }} && nix run github:ryantm/agenix -- -r
@@ -50,6 +51,7 @@ rekey:
 # ----------------------------
 # OpenTofu Commands
 # ----------------------------
+
 # Initializes the tofu dir
 init:
     cd {{ tofu_dir }} && tofu init
@@ -68,6 +70,7 @@ destroy:
 
 # ----------------------------
 # Deploy Commands
+
 # ----------------------------
 bootstrap_vm:
     nix run nixpkgs#nixos-rebuild boot -- \
@@ -87,6 +90,7 @@ deploy_vm:
 # ----------------------------
 # VM Commands
 # ----------------------------
+
 # Runs the QEMU VM
 run: build-qemu
     export QEMU_NET_OPTS="user,id=net0,hostfwd=tcp::2222-:22"
