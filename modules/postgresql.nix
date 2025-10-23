@@ -8,7 +8,7 @@
 let
   cfg = config.modules.postgresql;
   secrets_module = config.modules.secrets;
-  pg = pkgs.postgresql_17;
+  pg = pkgs.postgresql_18;
   inherit (lib)
     mkEnableOption
     mkIf
@@ -24,6 +24,7 @@ in
     ({
       environment.systemPackages = with pkgs; [
         barman
+        liburing
       ];
 
       services.postgresql = {
@@ -51,6 +52,17 @@ in
           compute_query_id = "on";
           "pg_stat_statements.max" = 10000;
           "pg_stat_statements.track" = "all";
+          # Async/IO Setup
+          io_method = "io_uring";
+          # Adjust shared buffers
+          shared_buffers = "1GB";
+          # Increase work memory for large operations
+          work_mem = "16MB";
+          # Enable huge pages if available
+          huge_pages = "try";
+          # Adjust I/O concurrency settings
+          effective_io_concurrency = 32;
+          maintenance_io_concurrency = 32;
         };
         extensions = with pg.pkgs; [
           omnigres
