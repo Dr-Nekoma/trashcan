@@ -7,6 +7,7 @@
 
 let
   cfg = config.modules.common;
+  disko_module = config.modules.disko;
   inherit (lib)
     mkEnableOption
     mkIf
@@ -17,11 +18,6 @@ in
 {
   options.modules.common = {
     enable = mkEnableOption "Common settings shared by all machines";
-    profile = mkOption {
-      type = lib.types.str;
-      default = null;
-      description = "The profile to use for the common module.";
-    };
   };
 
   config = mkIf cfg.enable (mkMerge [
@@ -29,6 +25,8 @@ in
       boot = {
         tmp.cleanOnBoot = true;
       };
+
+      zramSwap.enable = true;
 
       documentation.enable = false;
 
@@ -71,21 +69,10 @@ in
       };
 
       # Don't change this!
-      system.stateVersion = "25.05";
+      system.stateVersion = "25.11";
     })
 
-    (mkIf (cfg.profile == "aws") {
-      boot = {
-        loader = {
-          efi.canTouchEfiVariables = true;
-        };
-      };
-
-      # Hardware configuration
-      hardware.enableRedistributableFirmware = true;
-    })
-
-    (mkIf (cfg.profile == "vm") {
+    (mkIf (disko_module.enable && disko_module.target == "vm") {
       # Enable QEMU guest agent
       services.qemuGuest.enable = true;
 
@@ -101,9 +88,6 @@ in
 
       # Disable automatic filesystem creation from nixos-generators
       system.build.qemuFormatOverride = true;
-
-      # Hardware configuration
-      hardware.enableRedistributableFirmware = true;
 
       # Autologin to root
       services.getty.autologinUser = "root";

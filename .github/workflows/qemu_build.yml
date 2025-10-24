@@ -51,5 +51,6 @@ jobs:
       # Actual Pipelines
       - name: "[QEMU] Build"
         run: |
-          nix build .#qemu
+          nix develop .#ci --impure -c just bq
+
 

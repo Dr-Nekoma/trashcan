@@ -73,62 +73,56 @@ in
           CREATE EXTENSION pg_stat_statements;
         '';
       };
-    })
-
-    (mkIf secrets_module.enable {
-      # PG Bouncer
-      #services.pgbouncer =
-      #  let
-      #    pgb_af_file_path = config.age.secrets.pgb_af.path;
-      #  in
-      #  {
-      #    enable = true;
-      #    poolMode = "transaction";
-      #    defaultPoolSize = 50;
-      #    listenAddress = "*";
-      #    listenPort = 6432;
-      #    authFile = pgb_af_file_path;
-      #    databases = {
-      #      lyceum = "host=localhost port=5432 dbname=lyceum user=lyceum";
-      #    };
-      #    extraConfig = ''
-      #      min_pool_size=5
-      #      max_client_conn=400
-      #      reserve_pool_size=5
-      #    '';
-      #  };
 
       # haproxy
       #services.haproxy = {
       #  enable = true;
       #};
 
-      # keepalived
       services.keepalived = {
         enable = true;
+      };
+    })
+
+    (mkIf secrets_module.enable {
+      services.pgbouncer = {
+        enable = true;
+        poolMode = "transaction";
+        defaultPoolSize = 50;
+        listenAddress = "*";
+        listenPort = 6432;
+        authFile = config.age.secrets.pg_bouncer_auth_file.path;
+        databases = {
+          lyceum = "host=localhost port=5432 dbname=lyceum user=lyceum";
+        };
+        extraConfig = ''
+          min_pool_size=5
+          max_client_conn=400
+          reserve_pool_size=5
+        '';
       };
 
       # Add passsword after pg starts
       # https://discourse.nixos.org/t/assign-password-to-postgres-user-declaratively/9726/3
-      # systemd.services.postgresql.postStart =
-      #   let
-      #     pg_lyceum_user = config.age.secrets.pg_user_lyceum.path;
-      #     pg_migratiton_user = config.age.secrets.pg_user_migrations.path;
-      #   in
-      #   ''
-      #     psql -tA <<'EOF'
-      #       DO $$
-      #       DECLARE lyceum_password TEXT;
-      #       DECLARE migrations_password TEXT;
-      #       BEGIN
-      #         lyceum_password := trim(both from replace(pg_read_file('${pg_lyceum_user}'), E'\n', '''));
-      #         EXECUTE format('ALTER USER lyceum WITH PASSWORD '''%s''';', lyceum_password);
-      #
-      #         migrations_password := trim(both from replace(pg_read_file('${pg_migratiton_user}'), E'\n', '''));
-      #         EXECUTE format('ALTER USER migrations WITH PASSWORD '''%s''';', migrations_password);
-      #       END $$;
-      #     EOF
-      #   '';
+      systemd.services.postgresql.postStart =
+        let
+          pg_lyceum_user = config.age.secrets.pg_user_lyceum.path;
+          pg_migratiton_user = config.age.secrets.pg_user_migrations.path;
+        in
+        ''
+          psql -tA <<'EOF'
+            DO $$
+            DECLARE lyceum_password TEXT;
+            DECLARE migrations_password TEXT;
+            BEGIN
+              lyceum_password := trim(both from replace(pg_read_file('${pg_lyceum_user}'), E'\n', '''));
+              EXECUTE format('ALTER USER lyceum WITH PASSWORD '''%s''';', lyceum_password);
+
+              migrations_password := trim(both from replace(pg_read_file('${pg_migratiton_user}'), E'\n', '''));
+              EXECUTE format('ALTER USER migrations WITH PASSWORD '''%s''';', migrations_password);
+            END $$;
+          EOF
+        '';
     })
   ]);
 }

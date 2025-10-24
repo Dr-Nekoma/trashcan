@@ -4,25 +4,41 @@
   specialArgs,
   ...
 }:
-{
-  imports = [
-    ./bene.nix
-    ./deploy.nix
-  ];
+let
+  keys = import ../keys;
+  allKeys = keys.allKeys keys.systems keys.users;
+  everyone =
+    (
+      # Add terraform managed ssh key, if present
+      lib.optional (specialArgs ? terraform_ssh_key) specialArgs.terraform_ssh_key
+    )
+    ++ allKeys;
 
-  users = {
-    mutableUsers = false;
+  createDevUser = name: sshKeys: {
+    isNormalUser = true;
+    createHome = true;
+    description = name;
+    group = "users";
+    extraGroups = [
+      "wheel"
+    ];
+    openssh.authorizedKeys.keys = sshKeys;
   };
+in
+{
+  users = {
+    # Users are also immutable, can only be modified by Nix
+    mutableUsers = false;
 
-  users.users.root = {
-    openssh.authorizedKeys.keys =
-      (
-        # Add terraform managed ssh key, if present
-        lib.optional (specialArgs ? terraform_ssh_key) specialArgs.terraform_ssh_key
-      )
-      ++ [
-        # Add our own keys as well
-        "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDKStRI4iiTc6nTPKc0SPjHq79psNR5q733InvuHFAT0BHIiKWmDHeLS5jCep/MMrKa1w9qCt3bAnJVyu33+oqISx/5PzDBikiBBtBD6irovJx9dVvkjWkQLcbZwcStUfn6HFjyWdUb1jZqzQMf3JWeIj3RgP8nKwDatHSVB0GkvSETBiJ+bfbGKK1bacusqfsiN3b2niytDgnWMtKB4tMgvGUn5AEqRBtI5zDrnPU1T7edDCjI32QLBln/HlcfAHz+avN4YsW7iTWu25N/MSOQwBrKHLEQviGq9/j3Wu1pzxV2n2m32uUATFEKLf3sLCdsOWm1r+HlsXOcukUZnRhLc9O2ZVoWtDHo72iOzVY6rlRBoHvoUxw6A8k/jZWb1ospvjOLsjZuAZaDSjcE6iM0nXQSdhgGPSgeCTofOgteYoovA4XlK4aNomuTI3OPLr9P9SLC0qJHidvLIGQYWyMiwdeDJESbY2PFUNCi5VffwEUPYh8sp3E8EwjGDvSCygu4fU7vqaOi3OEziwg2ff89CdVr7k606LYmRF3dR+12Cp6XBOgUoaz+OzGn0Sr9HXw3GiF9xH/e1PL6mHwUT2NARB/mI64uY9JAi0/hrwkQsiIx1tf63qUDz/je9gk53wP7/GfWNoIeEkRzCz0QkEnxcMEoLjbTk56JFkmP0fpHDQ== (none)"
-      ];
+    # To make sure we can still log as root
+    users.root.openssh.authorizedKeys.keys = everyone;
+
+    # Other users
+    users.bene = createDevUser "bene" keys.users.bene;
+    users.deploy = createDevUser "deploy" everyone;
+    users.lemos = createDevUser "lemos" keys.users.lemos;
+    users.magueta = createDevUser "magueta" keys.users.magueta;
+    users.marinho = createDevUser "marinho" keys.users.marinho;
+    users.victor = createDevUser "victor" keys.users.victor;
   };
 }

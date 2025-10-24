@@ -12,6 +12,13 @@ variable "instance_type" {
   nullable    = false
 }
 
+variable "instance_root_volume_size_in_gb" {
+  description = "The instance used by the AMI and EC2"
+  type        = number
+  default     = 200
+  nullable    = false
+}
+
 variable "project" {
   type     = string
   default  = "trashcan"
@@ -44,7 +51,7 @@ variable "flake_path" {
 variable "flake_system" {
   description = "NixOS flake system to be use"
   type        = string
-  default     = "bootstrap"
+  default     = "bootstrap_aws"
   nullable    = false
 }
 
