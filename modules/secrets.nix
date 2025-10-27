@@ -90,8 +90,8 @@ in
         };
       })
       # Or if we have disko with the "vm" setup
-      (mkIf (disko_module.enable && disko_module.target == "aws") {
-        virtualisation.vmVariantWithDisko.agenix.age.sshKeyPaths = [
+      (mkIf (disko_module.enable && disko_module.target == "vm") {
+        virtualisation.vmVariantWithDisko.agenix.age.identityPaths = [
           "${impermanence_module.directory}/etc/agenix/server_key"
         ];
       })

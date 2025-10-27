@@ -57,8 +57,13 @@ in
       disko.devices = disko_settings.devices;
 
       virtualisation.vmVariantWithDisko = {
+        # 40GB in MB
+        virtualisation.diskSize = 40960;
+        # 4GB RAM
+        virtualisation.memorySize = 4096; 
         virtualisation.fileSystems."/".neededForBoot = true;
         virtualisation.fileSystems."/nix".neededForBoot = true;
+        virtualisation.fileSystems."/persist".neededForBoot = true;
         # For running VM on macos: https://www.tweag.io/blog/2023-02-09-nixos-vm-on-macos/
         # virtualisation.host.pkgs = inputs.nixpkgs.legacyPackages.aarch64-darwin;
       };
