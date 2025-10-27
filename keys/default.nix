@@ -29,12 +29,7 @@
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOpr5uuTSdASh31etYaiBjqK9n6CBp8+ogG1V2b7ig2T"
     ];
   };
-  allUsers =
-    systems: users:
-    let
-      allKeys = builtins.attrNames (systems // users);
-    in
-    builtins.foldl' (acc: ls: acc ++ ls) [ ] allKeys;
+  allUsers = systems: users: builtins.attrNames (systems // users);
   allKeys =
     systems: users:
     let

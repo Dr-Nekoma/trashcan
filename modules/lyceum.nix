@@ -52,7 +52,7 @@ in
           Type = "oneshot";
           RemainAfterExit = true;
 
-          # Needs root to write to user's home directory
+          # Needs root to write to an user's home directory
           User = "root";
         };
 
@@ -74,7 +74,7 @@ in
 
             cat ${config.age.secrets.erlang_cookie.path} > ${cookieFile}
 
-            echo "Erlang cookie installed at ${cookieFile}"
+            echo "Erlang cookie installed at: ${cookieFile}"
           '';
       };
     })

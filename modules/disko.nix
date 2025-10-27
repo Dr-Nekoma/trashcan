@@ -46,13 +46,13 @@ in
         kernelModules = [ "kvm-intel" ];
       };
 
-      boot.loader.grub.devices = lib.mkForce ["/dev/vda"];
+      boot.loader.grub.devices = lib.mkForce [ "/dev/vda" ];
 
       disko.devices = disko_settings.devices;
     })
 
     (mkIf (cfg.target == "vm") {
-      boot.loader.grub.devices = lib.mkForce ["/dev/vda"];
+      boot.loader.grub.devices = lib.mkForce [ "/dev/vda" ];
 
       disko.devices = disko_settings.devices;
 

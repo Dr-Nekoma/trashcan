@@ -131,6 +131,13 @@ in
       # PG credentials
       age = {
         secrets = {
+          pg_bouncer_auth_file = {
+            file = ../secrets/pg_bouncer_auth_file.age;
+            owner = config.systemd.services.pgbouncer.serviceConfig.User;
+            group = config.systemd.services.pgbouncer.serviceConfig.Group;
+            mode = "440";
+          };
+
           pg_user_lyceum = {
             file = ../secrets/pg_user_lyceum.age;
             owner = config.systemd.services.postgresql.serviceConfig.User;

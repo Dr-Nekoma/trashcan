@@ -30,6 +30,8 @@ in
     ({
       # FS setup
       fileSystems."${cfg.directory}".neededForBoot = true;
+      fileSystems."/nix".neededForBoot = true;
+
       # Workaround for the following service failing with a bind mount for /etc/machine-id
       # see: https://github.com/nix-community/impermanence/issues/229
       # boot.initrd.systemd.suppressedUnits = [ "systemd-machine-id-commit.service" ];

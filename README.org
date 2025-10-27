@@ -36,7 +36,7 @@ If you dont have any keys setup already:
 *** Qemu VM
 
 #+begin_src shell
-  just run
+  just boot_vm
 #+end_src
 
 When inside the VM, check if a few services are running fine:
@@ -75,31 +75,31 @@ You can also build an ~.iso~ to test with different tools.
 *** Provisioning with Terraform
 
 #+begin_src shell
-  just update-vars
-  just plan
-  just apply
+  plan
+  # or 'just plan'
+  apply
+  # or 'just apply' 
   # if you need to nuke the infra as well
-  just destroy
+  destroy
+  # or 'just destroy' 
 #+end_src
 
-After the initial terraform deploy, make sure to run:
-#+begin_src shell
-  just rekey
-#+end_src
+After the initial terraform deploy.
 
 *** Deploying with Nix
 
-After provisioning the infrastructure, you won't need Terraform anymore, all
-deploys can be done in pure Nix.
+After provisioning the initial infrastructure, you usually won't need to care
+about Terraform anymore, all deploys can be done in pure Nix.
 
 #+begin_src shell
-  just deploy
-  # or
   deploy
+  # or
+  just deploy
 #+end_src
 
 * Acknowledgements
 
 + The Terraform-based bootstrap is a modification from the great setup found in the
   [[https://github.com/Gabriella439/nixos-in-production][NixOS in Production]] book.
-+ Magalu Cloud setup is inspired by [[https://github.com/Misterio77/hackathon-mgc-factorio-terraform]][Declarative Factorio] repo.
++ The Magalu Cloud setup was inspired by [[https://github.com/Misterio77/hackathon-mgc-factorio-terraform][The Declarative Factorio]] repo.
+  

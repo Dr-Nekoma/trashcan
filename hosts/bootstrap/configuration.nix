@@ -30,6 +30,10 @@ in
   ]
   ++ extraPaths;
 
+  modules.common = {
+    enable = true;
+  };
+
   modules.disko = {
     enable = true;
     profile = profile;
@@ -52,21 +56,6 @@ in
     };
   };
 
-  nix = {
-    package = pkgs.nixVersions.stable;
-    settings.trusted-users = [ "@wheel" ];
-    extraOptions = ''
-      experimental-features = nix-command flakes
-    '';
-    # Clean up /nix/store/ after 2 weeks
-    gc = {
-      automatic = true;
-      dates = "weekly UTC";
-      options = "--delete-older-than 14d";
-    };
-    optimise.automatic = true;
-  };
-
   # We don't want the custom ssh module at first, we'll
   # leverage later after everything is setup.
   services.openssh = {
@@ -79,6 +68,4 @@ in
   };
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
-
-  system.stateVersion = "25.11";
 }

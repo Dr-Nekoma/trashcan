@@ -8,7 +8,7 @@ let
   device = deviceOptions."${target}";
 in
 {
-  disko.devices = {
+  devices = {
     disk = {
       main = {
         type = "disk";
@@ -47,17 +47,17 @@ in
             };
           };
         };
+      };
+    };
 
-        nodev = {
-          "/" = {
-            fsType = "tmpfs";
-            mountOptions = [
-              "defaults"
-              "size=50%"
-              "mode=755"
-            ];
-          };
-        };
+    nodev = {
+      "/" = {
+        fsType = "tmpfs";
+        mountOptions = [
+          "defaults"
+          "size=50%"
+          "mode=755"
+        ];
       };
     };
   };
