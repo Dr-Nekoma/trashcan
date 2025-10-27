@@ -92,10 +92,15 @@ in
       };
     })
 
+    # If disko is enabled and we're inside a QEMU VM
     (mkIf (disko_module.enable && disko_module.target == "vm") {
       # For testing purposes with a local VM
       virtualisation.vmVariantWithDisko.virtualisation.fileSystems."${cfg.directory}".neededForBoot =
         true;
+    })
+    # Otherwise, default case for disko being enabled
+    (mkIf (disko_module.enable && disko_module.target != "vm") {
+      virtualisation.fileSystems."${cfg.directory}".neededForBoot = true;
     })
   ]);
 }

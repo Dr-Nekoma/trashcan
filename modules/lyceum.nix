@@ -6,7 +6,7 @@
 }:
 
 let
-  cfg = config.modules.common;
+  cfg = config.modules.lyceum;
   impermanence_module = config.modules.impermanence;
   secrets_module = config.modules.secrets;
   inherit (lib)
