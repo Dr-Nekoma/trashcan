@@ -102,3 +102,4 @@ deploys can be done in pure Nix.
 
 + The Terraform-based bootstrap is a modification from the great setup found in the
   [[https://github.com/Gabriella439/nixos-in-production][NixOS in Production]] book.
++ Magalu Cloud setup is inspired by [[https://github.com/Misterio77/hackathon-mgc-factorio-terraform]][Declarative Factorio] repo.

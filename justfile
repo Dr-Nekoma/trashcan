@@ -34,7 +34,7 @@ build-iso:
 
 # Builds the QEMU VM
 build-qemu:
-    nix build ".#nixosConfigurations.{{ target_vm }}_vm.config.system.build.vm"
+    nix build ".#nixosConfigurations.{{ target_vm }}_vm.config.system.build.vmWithDisko"
 
 # Loads the current Flake into a REPL
 repl:
@@ -69,22 +69,29 @@ destroy:
     cd {{ tofu_dir }} && tofu apply -destroy -auto-approve
 
 # ----------------------------
-# Deploy Commands
+# Testing Commands
+# ----------------------------
+
+# Boot a QEMU VM, pointing to TARGET_VM
+boot_vm:
+    nix run -L '.#nixosConfigurations.{{ target_vm }}_vm.config.system.build.vmWithDisko'
 
 # ----------------------------
-bootstrap_vm:
-    nix run nixpkgs#nixos-rebuild boot -- \
-        --flake ".#nekoma_vm" \
-        --target-host "nixos_vm" \
-        --install-bootloader \
-        --fast --use-remote-sudo
-    export QEMU_NET_OPTS="user,id=net0,hostfwd=tcp::2222-:22"
-    result/bin/run-nixos-vm
+# Deploy Commands
+# ----------------------------
 
-deploy_vm:
+# Deploy a NixOS VM (On AWS)
+deploy_vm_aws:
     nix run nixpkgs#nixos-rebuild boot -- \
-        --flake ".#nekoma_vm" \
-        --target-host "nixos_vm" \
+        --flake ".#nekoma_aws" \
+        --target-host "nekoma_aws" \
+        --fast --use-remote-sudo
+
+# Deploy a NixOS VM (On Magalu Cloud)
+deploy_vm_mgc:
+    nix run nixpkgs#nixos-rebuild boot -- \
+        --flake ".#nekoma_mgc" \
+        --target-host "nekoma_mgc" \
         --fast --use-remote-sudo
 
 # ----------------------------

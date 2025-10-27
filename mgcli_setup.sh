@@ -7,7 +7,7 @@ printf "\nSetting up MG CLI from %s" "$ROOT_DIR"
 RELEASE_URL="https://github.com/MagaluCloud/mgccli/releases/download"
 RELEASE_ARCH=${RELEASE_ARCH:-linux_amd64}
 
-CLI_VERSION=${CLI_VERSION:-0.49.0}
+CLI_VERSION=${CLI_VERSION:-0.50.0}
 CLI_URL="$RELEASE_URL/v$CLI_VERSION/mgccli_${CLI_VERSION}_${RELEASE_ARCH}.tar.gz"
 CLI_PATH="$ROOT_DIR/mg_cli"
 

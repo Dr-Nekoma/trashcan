@@ -3,6 +3,8 @@
 let
   cfg = config.modules.ssh;
   impermanence_module = config.modules.impermanence;
+  keys = import ../keys;
+  everyone = keys.allUsers keys.systems keys.users;
   inherit (lib)
     mkEnableOption
     mkIf
@@ -21,10 +23,7 @@ in
         ports = [ 22 ];
         settings = {
           PasswordAuthentication = false;
-          AllowUsers = [
-            "bene"
-            "deploy"
-          ];
+          AllowUsers = [ "root" ] ++ everyone;
           X11Forwarding = false;
           # "yes", "without-password", "prohibit-password", "forced-commands-only", "no"
           PermitRootLogin = "prohibit-password";

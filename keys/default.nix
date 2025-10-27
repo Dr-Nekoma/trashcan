@@ -1,15 +1,15 @@
-let
+{
   systems = {
-    server = [
-      "${server_public_key}"
+    deploy = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMu7pzXqECR0dnuOjb0J3h0jjkbLJH0v0vlhChkBS9u7 trashcan-server"
     ];
   };
   users = {
     bene = [
-      # Managed by GPG
+      # GPG-managed ssh key
       "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDKStRI4iiTc6nTPKc0SPjHq79psNR5q733InvuHFAT0BHIiKWmDHeLS5jCep/MMrKa1w9qCt3bAnJVyu33+oqISx/5PzDBikiBBtBD6irovJx9dVvkjWkQLcbZwcStUfn6HFjyWdUb1jZqzQMf3JWeIj3RgP8nKwDatHSVB0GkvSETBiJ+bfbGKK1bacusqfsiN3b2niytDgnWMtKB4tMgvGUn5AEqRBtI5zDrnPU1T7edDCjI32QLBln/HlcfAHz+avN4YsW7iTWu25N/MSOQwBrKHLEQviGq9/j3Wu1pzxV2n2m32uUATFEKLf3sLCdsOWm1r+HlsXOcukUZnRhLc9O2ZVoWtDHo72iOzVY6rlRBoHvoUxw6A8k/jZWb1ospvjOLsjZuAZaDSjcE6iM0nXQSdhgGPSgeCTofOgteYoovA4XlK4aNomuTI3OPLr9P9SLC0qJHidvLIGQYWyMiwdeDJESbY2PFUNCi5VffwEUPYh8sp3E8EwjGDvSCygu4fU7vqaOi3OEziwg2ff89CdVr7k606LYmRF3dR+12Cp6XBOgUoaz+OzGn0Sr9HXw3GiF9xH/e1PL6mHwUT2NARB/mI64uY9JAi0/hrwkQsiIx1tf63qUDz/je9gk53wP7/GfWNoIeEkRzCz0QkEnxcMEoLjbTk56JFkmP0fpHDQ== (none)"
-      # Normal SSH
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICIBBOYrRk0BF8mN/+lRQiJE2RDV5oFBfWJTggzDRxOY marcos.schonfinkel@gmail.com"
+      # normal ssh key
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID5HDsDVFBscGYZ7Tb0dkx9bUUxDnEIB3s+T4pbpvc3D default"
     ];
     lemos = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMTVKqj451P0oYzmVTFg4J2Y5F3+iM0LsVxKYbCkDuit"
@@ -29,12 +29,16 @@ let
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOpr5uuTSdASh31etYaiBjqK9n6CBp8+ogG1V2b7ig2T"
     ];
   };
-  set = systems // users;
-  allKeys = builtins.attrValues set;
-  everyone = builtins.foldl' (acc: ls: acc ++ ls) [ ] allKeys;
-in
-{
-  "pg_user_lyceum.age".publicKeys = everyone;
-  "pg_user_migrations.age".publicKeys = everyone;
-  "server_ssh.age".publicKeys = everyone;
+  allUsers =
+    systems: users:
+    let
+      allKeys = builtins.attrNames (systems // users);
+    in
+    builtins.foldl' (acc: ls: acc ++ ls) [ ] allKeys;
+  allKeys =
+    systems: users:
+    let
+      allKeys = builtins.attrValues (systems // users);
+    in
+    builtins.foldl' (acc: ls: acc ++ ls) [ ] allKeys;
 }

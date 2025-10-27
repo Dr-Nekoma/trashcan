@@ -6,6 +6,7 @@
 }:
 let
   cfg = config.modules.impermanence;
+  disko_module = config.modules.disko;
   inherit (lib)
     mkEnableOption
     mkIf
@@ -21,12 +22,6 @@ in
       description = "The directory to use for the impermanence module.";
       default = "/persist";
       type = lib.types.str;
-    };
-
-    profile = mkOption {
-      type = lib.types.str;
-      default = null;
-      description = "The profile to use for the module.";
     };
 
   };
@@ -73,11 +68,29 @@ in
               ".zsh_history"
             ];
           };
+
+          deploy = {
+            directories = [
+              "Apps"
+              {
+                directory = ".gnupg";
+                mode = "0700";
+              }
+              {
+                directory = ".ssh";
+                mode = "0700";
+              }
+            ];
+            files = [
+              ".erlang.cookie"
+              ".zsh_history"
+            ];
+          };
         };
       };
     })
 
-    (mkIf (cfg.profile == "vm") {
+    (mkIf (disko_module.enable && disko_module.target == "vm") {
       # For testing purposes with a local VM
       virtualisation.vmVariantWithDisko.virtualisation.fileSystems."${cfg.directory}".neededForBoot =
         true;

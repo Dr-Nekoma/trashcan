@@ -47,10 +47,7 @@
       ...
     }:
     let
-      bootstrapArgs = {
-        hostId = "41d2315f";
-        profile = "vm";
-      };
+      hostId = "41d2315f";
 
       bootstrapModules = [
         agenix.nixosModules.default
@@ -95,7 +92,11 @@
             iso = nixos-generators.nixosGenerate {
               system = "x86_64-linux";
               modules = bootstrapModules;
-              specialArgs = bootstrapArgs;
+              specialArgs = {
+                hostId = hostId;
+                profile = "persistence";
+                target = "vm";
+              };
               format = "iso";
             };
 
@@ -104,7 +105,11 @@
             qemu = nixos-generators.nixosGenerate {
               system = "x86_64-linux";
               modules = bootstrapModules;
-              specialArgs = bootstrapArgs;
+              specialArgs = {
+                hostId = hostId;
+                profile = "persistence";
+                target = "vm";
+              };
               format = "qcow";
             };
           };
@@ -135,6 +140,14 @@
 
           # nix develop
           devShells = {
+            # `nix develop .#ci`
+            # reduce the number of packages to the bare minimum needed for CI
+            ci = pkgs.mkShell {
+              buildInputs = with pkgs; [
+                just
+              ];
+            };
+
             # nix develop --impure
             default = devenv.lib.mkShell {
               inherit inputs pkgs;
@@ -150,12 +163,20 @@
                       just
                     ];
 
+                    scripts = {
+                      apply.exec = "just apply";
+                      bq.exec = "just bq";
+                      destroy.exec = "just destroy";
+                      init.exec = "just init";
+                      plan.exec = "just plan";
+                    };
+
                     languages.opentofu = {
                       enable = true;
                     };
 
                     enterShell = ''
-                      Adding mg_cli to $PATH
+                      Adding the Magalu CLI to $PATH
                       export PATH="$(pwd)/mg_cli:$PATH"
                     '';
                   }
@@ -170,36 +191,73 @@
 
       flake = {
         nixosConfigurations = {
-          # AWS
-          # sudo nixos-rebuild boot --flake .#bootstrap
-          bootstrap = nixpkgs.lib.nixosSystem {
+          # -------
+          #   AWS
+          # -------
+          # sudo nixos-rebuild boot --flake .#bootstrap_aws
+          bootstrap_aws = nixpkgs.lib.nixosSystem {
             modules = bootstrapModules;
             specialArgs = {
-              hostId = bootstrapArgs.hostId;
-              profile = "aws";
+              hostId = hostId;
+              profile = "bootstrap";
+              target = "aws";
             };
           };
 
-          # sudo nixos-rebuild boot --flake .#nekoma
-          nekoma = nixpkgs.lib.nixosSystem {
+          # sudo nixos-rebuild boot --flake .#nekoma_aws
+          nekoma_aws = nixpkgs.lib.nixosSystem {
             modules = nekomaModules;
             specialArgs = {
-              hostId = bootstrapArgs.hostId;
-              profile = "aws";
+              hostId = hostId;
+              profile = "persistence";
+              target = "aws";
             };
           };
 
-          # QEMU
+          # -------
+          #   MGC
+          # -------
+          # sudo nixos-rebuild boot --flake .#bootstrap_mgc
+          bootstrap_mgc = nixpkgs.lib.nixosSystem {
+            modules = bootstrapModules;
+            specialArgs = {
+              hostId = hostId;
+              profile = "bootstrap";
+              target = "mgc";
+            };
+          };
+
+          # sudo nixos-rebuild boot --flake .#nekoma_mgc
+          nekoma_mgc = nixpkgs.lib.nixosSystem {
+            modules = nekomaModules;
+            specialArgs = {
+              hostId = hostId;
+              profile = "persistence";
+              target = "mgc";
+            };
+          };
+
+          # --------
+          #   QEMU
+          # --------
           # sudo nixos-rebuild boot --flake .#bootstrap_vm
           bootstrap_vm = nixpkgs.lib.nixosSystem {
             modules = bootstrapModules;
-            specialArgs = bootstrapArgs;
+            specialArgs = {
+              hostId = hostId;
+              profile = "bootstrap";
+              target = "vm";
+            };
           };
 
           # sudo nixos-rebuild boot --flake .#nekoma_vm
           nekoma_vm = nixpkgs.lib.nixosSystem {
             modules = nekomaModules;
-            specialArgs = bootstrapArgs;
+            specialArgs = {
+              hostId = hostId;
+              profile = "persistence";
+              target = "vm";
+            };
           };
         };
       };
