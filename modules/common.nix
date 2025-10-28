@@ -18,6 +18,17 @@ in
 {
   options.modules.common = {
     enable = mkEnableOption "Common settings shared by all machines";
+
+    swap = {
+      enable = mkEnableOption "Enable SWAP file" // {
+        default = true;
+      };
+
+      size = mkOption {
+        type = lib.types.int;
+        default = 8;
+      };
+    };
   };
 
   config = mkIf cfg.enable (mkMerge [
@@ -47,7 +58,7 @@ in
 
       nix = {
         package = pkgs.nixVersions.stable;
-        settings.trusted-users = [ "@wheel" ];
+        settings.trusted-users = [ "root" "@wheel" ];
         extraOptions = ''
           experimental-features = nix-command flakes
         '';
@@ -59,6 +70,7 @@ in
         };
         optimise.automatic = true;
       };
+      security.sudo.wheelNeedsPassword = false;
 
       # Extra stuff
       # programs.zsh.enable = true;
@@ -70,6 +82,15 @@ in
 
       # Don't change this!
       system.stateVersion = "25.11";
+    })
+
+    (mkIf cfg.swap.enable {
+      swapDevices = [
+        {
+          device = "/swapfile";
+          size = cfg.swap.size * 1024;
+        }
+      ];
     })
 
     (mkIf (disko_module.enable && disko_module.target == "vm") {

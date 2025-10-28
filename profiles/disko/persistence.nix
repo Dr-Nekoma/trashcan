@@ -6,7 +6,7 @@ let
     "vm" = "vda";
   };
   device = deviceOptions."${target}";
-  extraAttrs = if (target == "vm") then { imageSize = "40G"; } else {};
+  extraAttrs = if (target == "vm") then { imageSize = "40G"; } else { };
 in
 {
   devices = {

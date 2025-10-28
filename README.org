@@ -3,10 +3,13 @@
 #+html: <a href="https://builtwithnix.org"><img alt="built with nix" src="https://builtwithnix.org/badge.svg" /></a><br>
 #+html: <a href="https://github.com/Dr-Nekoma/trashcan/actions/workflows/qemu_build.yml"><img alt="[QEMU] Build" src="https://github.com/Dr-Nekoma/trashcan/actions/workflows/qemu_build.yml/badge.svg" /></a>
 
-This repository contains the server configuration to host our applications,
-currently we deploy the following projects here:
+This repository contains the server configuration to host applications from
+[[https://github.com/Dr-Nekoma][Dr. Nekoma]] and[[https://github.com/dont-rely-on-nulls][ Don't Rely on Nulls]]. We currently host the following projects in it:
 
 + [[https://github.com/Dr-Nekoma/lyceum][Lyceum]]
+
+This is also an ongoing experiment mixing different tools, like[[https://nixos.org/][ Nix/NixOS]] (and
+[[https://devenv.sh/][devenv]]),[[https://opentofu.org/][ OpenTofu]] and [[https://github.com/terrateamio/terrateam][Terrateam]], to name a few.
 
 ** Developmennt
 

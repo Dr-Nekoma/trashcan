@@ -84,18 +84,16 @@ boot_vm:
 # ----------------------------
 
 # Deploy a NixOS VM (On AWS)
-deploy_vm_aws:
-    nix run nixpkgs#nixos-rebuild boot -- \
-        --flake ".#nekoma_aws" \
-        --target-host "nekoma_aws" \
-        --fast --use-remote-sudo
+deploy_aws:
+    @./deploy.sh \
+        --target-flake "nekoma_aws" \
+        --target-platform "aws"
 
 # Deploy a NixOS VM (On Magalu Cloud)
-deploy_vm_mgc:
-    nix run nixpkgs#nixos-rebuild boot -- \
-        --flake ".#nekoma_mgc" \
-        --target-host "nekoma_mgc" \
-        --fast --use-remote-sudo
+deploy_mgc:
+    @./deploy.sh \
+        --target-flake "nekoma_mgc" \
+        --target-platform "mgc"
 
 # ----------------------------
 # VM Commands

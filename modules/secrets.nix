@@ -82,12 +82,6 @@ in
             }
           ];
         };
-
-        environment.persistence."${impermanence_module.directory}" = {
-          directories = [
-            "/var/lib/secrets"
-          ];
-        };
       })
       # Or if we have disko with the "vm" setup
       (mkIf (disko_module.enable && disko_module.target == "vm") {
