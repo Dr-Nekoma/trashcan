@@ -7,6 +7,7 @@ modules_dir := justfile_directory() + "/modules"
 tofu_dir := justfile_directory() + "/tofu/aws"
 secrets_dir := justfile_directory() + "/secrets"
 target_vm := env_var_or_default("TARGET_VM", "bootstrap")
+target_vm_memory := env_var_or_default("TARGET_VM_MEM", "2048")
 target_flake := env_var_or_default("TARGET_FLAKE", "bootstrap")
 release := `git tag -l --sort=-creatordate | head -n 1`
 replace := if os() == "linux" { "sed -i" } else { "sed -i '' -e" }
@@ -34,7 +35,9 @@ build-iso:
 
 # Builds the QEMU VM
 build-qemu:
-    nix build ".#nixosConfigurations.{{ target_vm }}_vm.config.system.build.vmWithDisko"
+    #nix build ".#nixosConfigurations.{{ target_vm }}_vm.config.system.build.vmWithDisko"
+    nix build .#nixosConfigurations.{{ target_vm }}.config.system.build.diskoImages
+    ls -la main.raw
 
 # Loads the current Flake into a REPL
 repl:
@@ -101,4 +104,5 @@ deploy_vm_mgc:
 # Runs the QEMU VM
 run: build-qemu
     export QEMU_NET_OPTS="user,id=net0,hostfwd=tcp::2222-:22"
-    result/bin/run-nixos-vm
+    nix run .#qemu -- ./main.raw
+    # result/bin/run-nixos-vm

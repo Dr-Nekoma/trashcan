@@ -34,6 +34,11 @@ in
 
   config = mkIf cfg.enable (mkMerge [
     (mkIf (cfg.target == "aws") {
+      boot.loader.grub = {
+        enable = true;
+        devices = lib.mkForce [ "/dev/nvme0n1" ];
+      };
+
       disko.devices = disko_settings.devices;
     })
 
@@ -60,7 +65,7 @@ in
         # 40GB in MB
         virtualisation.diskSize = 40960;
         # 4GB RAM
-        virtualisation.memorySize = 4096; 
+        virtualisation.memorySize = 4096;
         virtualisation.fileSystems."/".neededForBoot = true;
         virtualisation.fileSystems."/nix".neededForBoot = true;
         virtualisation.fileSystems."/persist".neededForBoot = true;

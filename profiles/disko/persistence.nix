@@ -6,12 +6,13 @@ let
     "vm" = "vda";
   };
   device = deviceOptions."${target}";
+  extraAttrs = if (target == "vm") then { imageSize = "40G"; } else {};
 in
 {
   devices = {
     disk.main = {
       type = "disk";
-      device = "/dev/vda";
+      device = "/dev/${device}";
       content = {
         type = "gpt";
         partitions = {
@@ -42,11 +43,15 @@ in
           };
         };
       };
-    };
-    
+    }
+    // extraAttrs;
+
     nodev."/" = {
       fsType = "tmpfs";
-      mountOptions = [ "size=2G" "mode=755" ];
+      mountOptions = [
+        "size=2G"
+        "mode=755"
+      ];
     };
   };
 }
