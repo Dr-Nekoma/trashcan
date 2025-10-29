@@ -40,6 +40,9 @@ in
       };
 
       disko.devices = disko_settings.devices;
+
+      # virtualisation.fileSystems."/".neededForBoot = true;
+      # virtualisation.fileSystems."/nix".neededForBoot = true;
     })
 
     (mkIf (cfg.target == "mgc") {
@@ -54,21 +57,33 @@ in
       boot.loader.grub.devices = lib.mkForce [ "/dev/vda" ];
 
       disko.devices = disko_settings.devices;
+
+      # virtualisation.fileSystems."/".neededForBoot = true;
+      # virtualisation.fileSystems."/nix".neededForBoot = true;
     })
 
     (mkIf (cfg.target == "vm") {
+      # Boot configuration
       boot.loader.grub.devices = lib.mkForce [ "/dev/vda" ];
+      boot.initrd.availableKernelModules = [
+        "ahci"
+        "xhci_pci"
+        "virtio_pci"
+        "sr_mod"
+        "virtio_blk"
+      ];
+      boot.kernelModules = [ ];
 
       disko.devices = disko_settings.devices;
 
       virtualisation.vmVariantWithDisko = {
-        # 40GB in MB
+        # 40GB in Mb
         virtualisation.diskSize = 40960;
-        # 4GB RAM
+        # 4GB in Mb
         virtualisation.memorySize = 4096;
-        virtualisation.fileSystems."/".neededForBoot = true;
-        virtualisation.fileSystems."/nix".neededForBoot = true;
-        virtualisation.fileSystems."/persist".neededForBoot = true;
+        # virtualisation.fileSystems."/".neededForBoot = true;
+        # virtualisation.fileSystems."/nix".neededForBoot = true;
+        # virtualisation.fileSystems."/persist".neededForBoot = true;
         # For running VM on macos: https://www.tweag.io/blog/2023-02-09-nixos-vm-on-macos/
         # virtualisation.host.pkgs = inputs.nixpkgs.legacyPackages.aarch64-darwin;
       };

@@ -171,6 +171,7 @@
                     scripts = {
                       apply.exec = "just apply";
                       bq.exec = "just bq";
+                      rq.exec = "just rq";
                       destroy.exec = "just destroy";
                       init.exec = "just init";
                       plan.exec = "just plan";

@@ -16,6 +16,7 @@ replace := if os() == "linux" { "sed -i" } else { "sed -i '' -e" }
 
 alias bi := build-iso
 alias bq := build-qemu
+alias rq := run-qemu
 
 # Lists all availiable targets
 default:
@@ -35,9 +36,7 @@ build-iso:
 
 # Builds the QEMU VM
 build-qemu:
-    #nix build ".#nixosConfigurations.{{ target_vm }}_vm.config.system.build.vmWithDisko"
-    nix build .#nixosConfigurations.{{ target_vm }}.config.system.build.diskoImages
-    ls -la main.raw
+    nix build ".#nixosConfigurations.{{ target_vm }}_vm.config.system.build.vmWithDisko"
 
 # Loads the current Flake into a REPL
 repl:
@@ -72,11 +71,11 @@ destroy:
     cd {{ tofu_dir }} && tofu apply -destroy -auto-approve
 
 # ----------------------------
-# Testing Commands
+# VM Commands
 # ----------------------------
 
 # Boot a QEMU VM, pointing to TARGET_VM
-boot_vm:
+run-qemu: build-qemu
     nix run -L '.#nixosConfigurations.{{ target_vm }}_vm.config.system.build.vmWithDisko'
 
 # ----------------------------
@@ -94,13 +93,3 @@ deploy_mgc:
     @./deploy.sh \
         --target-flake "nekoma_mgc" \
         --target-platform "mgc"
-
-# ----------------------------
-# VM Commands
-# ----------------------------
-
-# Runs the QEMU VM
-run: build-qemu
-    export QEMU_NET_OPTS="user,id=net0,hostfwd=tcp::2222-:22"
-    nix run .#qemu -- ./main.raw
-    # result/bin/run-nixos-vm

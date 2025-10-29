@@ -21,13 +21,7 @@ let
       "${modulesPath}/profiles/qemu-guest.nix"
     ];
   };
-  swapOptions = {
-    "aws" = 16;
-    "mgc" = 16;
-    "vm" = 4;
-  };
   extraPaths = extraImports."${target}";
-  swapSize = swapOptions."${target}";
 in
 {
   imports = [
@@ -38,16 +32,16 @@ in
 
   modules.common = {
     enable = true;
-    swap = {
-      enable = true;
-      size = swapSize;
-    };
   };
 
   modules.disko = {
     enable = true;
     profile = profile;
     target = target;
+  };
+
+  modules.impermanence = {
+    enable = true;
   };
 
   modules.ssh = {
@@ -58,17 +52,6 @@ in
   # https://search.nixos.org/options?channel=unstable&show=networking.hostId&query=networking.hostId
   # head -c4 /dev/urandom | od -A none -t x4
   networking.hostId = hostId;
-
-  # We don't want the custom ssh module at first, we'll
-  # leverage later after everything is setup.
-  # services.openssh = {
-  #   enable = true;
-  #   settings = {
-  #     # This will be undone after we deployt he real Nekoma VM
-  #     PermitRootLogin = lib.mkForce "yes";
-  #     PasswordAuthentication = false;
-  #   };
-  # };
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 }

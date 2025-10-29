@@ -40,6 +40,18 @@ in
     })
 
     (mkIf secrets_module.enable {
+      age = {
+        secrets = {
+          lyceum_erlang_cookie = {
+            file = ../secrets/lyceum_erlang_cookie.age;
+            # TODO: use the deploy user
+            # owner = config.systemd.services.postgresql.serviceConfig.User;
+            # group = config.systemd.services.postgresql.serviceConfig.Group;
+            mode = "444";
+          };
+        };
+      };
+
       systemd.services.erlang-cookie-setup = {
         description = "Setup an Erlang Node Cookie";
         wantedBy = [ "multi-user.target" ];

@@ -28,10 +28,6 @@ in
 
   config = mkIf cfg.enable (mkMerge [
     ({
-      # FS setup
-      fileSystems."${cfg.directory}".neededForBoot = true;
-      fileSystems."/nix".neededForBoot = true;
-
       # Workaround for the following service failing with a bind mount for /etc/machine-id
       # see: https://github.com/nix-community/impermanence/issues/229
       # boot.initrd.systemd.suppressedUnits = [ "systemd-machine-id-commit.service" ];
@@ -90,17 +86,26 @@ in
           };
         };
       };
+
+      # Ensure ephemeral root (tmpfs)
+      # fileSystems."/" = {
+      #   fsType = "tmpfs";
+      #   mountOptions = [ "mode=755" ];
+      #   neededForBoot = true;
+      # };
+
+      # systemd.tmpfiles.rules = [
+      #   "d ${cfg.directory} 0755 root root -"
+      # ];
+      #
+      # Ensure mount order: / first, then /persist
+      fileSystems."${cfg.directory}".neededForBoot = true;
     })
 
-    # If disko is enabled and we're inside a QEMU VM
+    # Optional: additional VM-specific logic
     (mkIf (disko_module.enable && disko_module.target == "vm") {
-      # For testing purposes with a local VM
       virtualisation.vmVariantWithDisko.virtualisation.fileSystems."${cfg.directory}".neededForBoot =
         true;
-    })
-    # Otherwise, default case for disko being enabled
-    (mkIf (disko_module.enable && disko_module.target != "vm") {
-      virtualisation.fileSystems."${cfg.directory}".neededForBoot = true;
     })
   ]);
 }

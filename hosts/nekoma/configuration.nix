@@ -29,13 +29,7 @@ let
       "${modulesPath}/profiles/qemu-guest.nix"
     ];
   };
-  swapOptions = {
-    "aws" = 16;
-    "mgc" = 16;
-    "vm" = 4;
-  };
   extraPaths = extraImports."${target}";
-  swapSize = swapOptions."${target}";
 in
 {
   imports = [
@@ -46,10 +40,6 @@ in
 
   modules.common = {
     enable = true;
-    swap = {
-      enable = true;
-      size = swapSize;
-    };
   };
 
   modules.disko = {

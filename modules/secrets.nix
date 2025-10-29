@@ -4,13 +4,18 @@
   ...
 }:
 
-with lib;
 let
   cfg = config.modules.secrets;
   disko_module = config.modules.disko;
   impermanence_module = config.modules.impermanence;
-  lyceum_module = config.modules.lyceum;
   postgresql_module = config.modules.postgresql;
+
+  inherit (lib)
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    ;
 in
 {
   options.modules.secrets = {
@@ -84,11 +89,11 @@ in
         };
       })
       # Or if we have disko with the "vm" setup
-      (mkIf (disko_module.enable && disko_module.target == "vm") {
-        virtualisation.vmVariantWithDisko.agenix.age.identityPaths = [
-          "${impermanence_module.directory}/etc/agenix/server_key"
-        ];
-      })
+      # (mkIf (disko_module.enable && disko_module.target == "vm") {
+      #   virtualisation.vmVariantWithDisko.agenix.age.identityPaths = [
+      #     "${impermanence_module.directory}/etc/agenix/server_key"
+      #   ];
+      # })
     ]))
     # Otherwise (impermanence being disabled)
     (mkIf (!impermanence_module.enable) {
@@ -100,52 +105,7 @@ in
           "/etc/ssh/ssh_host_rsa_key"
           "/var/lib/secrets/id_ed25519"
         ]
-        ++ (map (x: "${impermanence_module.directory}${x}") cfg.paths);
-      };
-    })
-
-    # If Lyceum is enabled
-    (mkIf lyceum_module.enable {
-      # PG credentials
-      age = {
-        secrets = {
-          lyceum_erlang_cookie = {
-            file = ../secrets/lyceum_erlang_cookie.age;
-            # TODO: use the deploy user
-            # owner = config.systemd.services.postgresql.serviceConfig.User;
-            # group = config.systemd.services.postgresql.serviceConfig.Group;
-            mode = "444";
-          };
-        };
-      };
-    })
-
-    # If PostgreSQL is enabled
-    (mkIf postgresql_module.enable {
-      # PG credentials
-      age = {
-        secrets = {
-          pg_bouncer_auth_file = {
-            file = ../secrets/pg_bouncer_auth_file.age;
-            owner = config.systemd.services.pgbouncer.serviceConfig.User;
-            group = config.systemd.services.pgbouncer.serviceConfig.Group;
-            mode = "440";
-          };
-
-          pg_user_lyceum = {
-            file = ../secrets/pg_user_lyceum.age;
-            owner = config.systemd.services.postgresql.serviceConfig.User;
-            group = config.systemd.services.postgresql.serviceConfig.Group;
-            mode = "440";
-          };
-
-          pg_user_migrations = {
-            file = ../secrets/pg_user_migrations.age;
-            owner = config.systemd.services.postgresql.serviceConfig.User;
-            group = config.systemd.services.postgresql.serviceConfig.Group;
-            mode = "440";
-          };
-        };
+        ++ cfg.paths;
       };
     })
   ]);

@@ -18,17 +18,6 @@ in
 {
   options.modules.common = {
     enable = mkEnableOption "Common settings shared by all machines";
-
-    swap = {
-      enable = mkEnableOption "Enable SWAP file" // {
-        default = true;
-      };
-
-      size = mkOption {
-        type = lib.types.int;
-        default = 8;
-      };
-    };
   };
 
   config = mkIf cfg.enable (mkMerge [
@@ -58,7 +47,10 @@ in
 
       nix = {
         package = pkgs.nixVersions.stable;
-        settings.trusted-users = [ "root" "@wheel" ];
+        settings.trusted-users = [
+          "root"
+          "@wheel"
+        ];
         extraOptions = ''
           experimental-features = nix-command flakes
         '';
@@ -84,28 +76,9 @@ in
       system.stateVersion = "25.11";
     })
 
-    (mkIf cfg.swap.enable {
-      swapDevices = [
-        {
-          device = "/swapfile";
-          size = cfg.swap.size * 1024;
-        }
-      ];
-    })
-
     (mkIf (disko_module.enable && disko_module.target == "vm") {
       # Enable QEMU guest agent
       services.qemuGuest.enable = true;
-
-      # Boot configuration
-      boot.initrd.availableKernelModules = [
-        "ahci"
-        "xhci_pci"
-        "virtio_pci"
-        "sr_mod"
-        "virtio_blk"
-      ];
-      boot.kernelModules = [ ];
 
       # Disable automatic filesystem creation from nixos-generators
       system.build.qemuFormatOverride = true;
