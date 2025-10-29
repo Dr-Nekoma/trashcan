@@ -7,6 +7,23 @@
 let
   cfg = config.modules.impermanence;
   disko_module = config.modules.disko;
+  defaultDirectories = {
+    directories = [
+      "Code"
+      {
+        directory = ".gnupg";
+        mode = "0700";
+      }
+      {
+        directory = ".ssh";
+        mode = "0700";
+      }
+    ];
+    files = [
+      ".bash_history"
+    ];
+  };
+
   inherit (lib)
     mkEnableOption
     mkIf
@@ -49,23 +66,11 @@ in
           "/var/lib/id_ed25519"
         ];
         users = {
-          bene = {
-            directories = [
-              "Code"
-              "Documents"
-              {
-                directory = ".gnupg";
-                mode = "0700";
-              }
-              {
-                directory = ".ssh";
-                mode = "0700";
-              }
-            ];
-            files = [
-              ".zsh_history"
-            ];
-          };
+          bene = defaultDirectories;
+          lemos = defaultDirectories;
+          magueta = defaultDirectories;
+          marinho = defaultDirectories;
+          victor = defaultDirectories;
 
           deploy = {
             directories = [
@@ -87,18 +92,7 @@ in
         };
       };
 
-      # Ensure ephemeral root (tmpfs)
-      # fileSystems."/" = {
-      #   fsType = "tmpfs";
-      #   mountOptions = [ "mode=755" ];
-      #   neededForBoot = true;
-      # };
-
-      # systemd.tmpfiles.rules = [
-      #   "d ${cfg.directory} 0755 root root -"
-      # ];
-      #
-      # Ensure mount order: / first, then /persist
+      # Ensure impermanence's directory is needed as well
       fileSystems."${cfg.directory}".neededForBoot = true;
     })
 

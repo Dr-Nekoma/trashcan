@@ -23,7 +23,7 @@ in
 
     profile = mkOption {
       type = lib.types.str;
-      description = "The target to use for the disko module. Can be either 'bootstrap' or 'persistence'.";
+      description = "The target to use for the disko module. Only 'ext4' is supported right now.";
     };
 
     target = mkOption {

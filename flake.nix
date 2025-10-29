@@ -94,7 +94,7 @@
               modules = bootstrapModules;
               specialArgs = {
                 hostId = hostId;
-                profile = "persistence";
+                profile = "ext4";
                 target = "vm";
               };
               format = "iso";
@@ -107,7 +107,7 @@
               modules = bootstrapModules;
               specialArgs = {
                 hostId = hostId;
-                profile = "persistence";
+                profile = "ext4";
                 target = "vm";
               };
               format = "qcow";
@@ -205,7 +205,7 @@
             modules = bootstrapModules;
             specialArgs = {
               hostId = hostId;
-              profile = "bootstrap";
+              profile = "ext4";
               target = "aws";
             };
           };
@@ -215,7 +215,7 @@
             modules = nekomaModules;
             specialArgs = {
               hostId = hostId;
-              profile = "persistence";
+              profile = "ext4";
               target = "aws";
             };
           };
@@ -228,7 +228,7 @@
             modules = bootstrapModules;
             specialArgs = {
               hostId = hostId;
-              profile = "bootstrap";
+              profile = "ext4";
               target = "mgc";
             };
           };
@@ -238,7 +238,7 @@
             modules = nekomaModules;
             specialArgs = {
               hostId = hostId;
-              profile = "persistence";
+              profile = "ext4";
               target = "mgc";
             };
           };
@@ -251,7 +251,7 @@
             modules = bootstrapModules;
             specialArgs = {
               hostId = hostId;
-              profile = "bootstrap";
+              profile = "ext4";
               target = "vm";
             };
           };
@@ -261,7 +261,7 @@
             modules = nekomaModules;
             specialArgs = {
               hostId = hostId;
-              profile = "persistence";
+              profile = "ext4";
               target = "vm";
             };
           };
