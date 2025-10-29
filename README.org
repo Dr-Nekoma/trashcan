@@ -38,8 +38,24 @@ If you dont have any keys setup already:
 
 *** Qemu VM
 
+To build a local VM, first proceed to run any of these commands:
+
 #+begin_src shell
-  just boot_vm
+  just build-qemu
+  # or via an alias
+  just bq
+  # or if you're REALLY LAZY
+  bq
+#+end_src
+
+Followed by:
+
+#+begin_src shell
+  just run-qemu
+  # or via an alias
+  just rq
+  # or the lazy version...
+  rq
 #+end_src
 
 When inside the VM, check if a few services are running fine:
@@ -51,7 +67,7 @@ When inside the VM, check if a few services are running fine:
 Add the following to your ~$HOME/.ssh/config~:
 
 #+begin_src shell
-  Host nixos_vm
+  Host nekoma_vm
     HostName 127.0.0.1
     Port 2222
     StrictHostKeyChecking no
@@ -62,7 +78,7 @@ Add the following to your ~$HOME/.ssh/config~:
 then try to login:
 
 #+begin_src shell
-  ssh nixos_vm
+  ssh nekoma_vm
 #+end_src
 
 *** Custom ISO 
@@ -95,9 +111,9 @@ After provisioning the initial infrastructure, you usually won't need to care
 about Terraform anymore, all deploys can be done in pure Nix.
 
 #+begin_src shell
-  deploy
-  # or
   just deploy
+  # or
+  deploy
 #+end_src
 
 * Acknowledgements
