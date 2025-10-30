@@ -1,52 +1,54 @@
-resource "mgc_virtual_machine_instances_networks" "vpc" {
-  provider    = mgc.sudeste
-  name        = "nixos-vpc"
-  description = "VPC for NixOS deployment"
+resource "mgc_network_vpc" "vpc" {
+  name        = "vpc-nekoma"
+  description = "Main VPC"
+  cidr_block  = "10.0.0.0/16"
+}
+
+resource "mgc_network_vpcs_interfaces" "vpci" {
+    name = "vpci-nekoma"
+    vpc_id = mgc_network_vpcs.vpc.id
 }
 
 # Public Subnet
-resource "mgc_virtual_machine_instances_network_subnets" "public" {
-  provider   = mgc.sudeste
-  name       = "nixos-public-subnet"
-  network_id = mgc_virtual_machine_instances_networks.vpc.id
-  cidr_block = "10.0.1.0/24"
+resource "mgc_network_subnet" "net_pub" {
+  name        = "snet-nekoma"
+  vpc_id      = mgc_network_vpc.vpc.id
+  cidr_block  = "10.0.1.0/24"
+  
+  # Enable auto-assign public IP for instances in this subnet
+  map_public_ip_on_launch = true
 }
 
-# Security Group
-resource "mgc_virtual_machine_instances_security_groups" "nixos_sg" {
-  provider    = mgc.sudeste
-  name        = "nixos-security-group"
-  description = "Allow SSH access"
+# Create Security Group
+resource "mgc_network_security_group" "sg_vm" {
+  name        = "sg-nekoma"
+  description = "Security group for the Nekoma server"
+  vpc_id      = mgc_network_vpc.vpc.id
 }
 
-resource "mgc_virtual_machine_instances_security_groups_rules" "allow_ssh" {
-  provider          = mgc.sudeste
-  security_group_id = mgc_virtual_machine_instances_security_groups.nixos_sg.id
+# Security Group Rule - SSH
+resource "mgc_network_security_group_rules" "allow_ssh" {
+  security_group_id = mgc_network_security_group.sg_vm.id
   direction         = "ingress"
-  ethertype         = "IPv4"
-  port_range_max    = 22
-  port_range_min    = 22
   protocol          = "tcp"
-  remote_ip_prefix  = "0.0.0.0/0"
+  port_range_min    = 22
+  port_range_max    = 22
+  cidr_block        = "0.0.0.0/0"
+  description       = "Allow SSH access"
 }
 
-resource "mgc_virtual_machine_instances_security_groups_rules" "allow_all_outbound" {
-  provider          = mgc.sudeste
-  security_group_id = mgc_virtual_machine_instances_security_groups.nixos_sg.id
-  direction         = "egress"
-  ethertype         = "IPv4"
-  protocol          = null
-  remote_ip_prefix  = "0.0.0.0/0"
+# Security Group Rule - EPMD
+resource "mgc_network_security_group_rules" "allow_epmd" {
+  security_group_id = mgc_network_security_group.sg_vm.id
+  direction         = "ingress"
+  protocol          = "tcp"
+  port_range_min    = 4369
+  port_range_max    = 4369
+  cidr_block        = "0.0.0.0/0"
+  description       = "Allow EPMD access"
 }
 
-# Get Ubuntu 22.04, then replace it with NixOS
-# using nixos-anywhere:
-#   https://github.com/nix-community/nixos-anywhere
-data "mgc_virtual_machine_instances_images" "ubuntu" {
-  provider = mgc.sudeste
-  name     = "cloud-ubuntu-22.04 LTS"
-}
-
-data "mgc_virtual_machine_instances_availability_zones" "available" {
-  provider = mgc.sudeste
+# Public IPs
+resource "mgc_network_public_ips" "ip" {
+  vpc_id      = mgc_network_vpc.vpc.id
 }

@@ -60,7 +60,6 @@ in
           "/var/lib/secrets"
           "/var/log"
         ];
-        # Files to persist
         files = [
           "/etc/machine-id"
           "/var/lib/id_ed25519"

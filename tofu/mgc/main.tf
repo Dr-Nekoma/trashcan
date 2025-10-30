@@ -15,56 +15,28 @@ resource "local_file" "ssh_public_key" {
 }
 
 resource "mgc_ssh_keys" "deploy_key" {
-  provider = mgc.sudeste
   name     = "nixos-deploy-key"
   key      = tls_private_key.ssh_key.public_key_openssh
 }
 
-# VM Instance
+# VM Instances
 resource "mgc_virtual_machine_instances" "nixos_vm" {
-  provider = mgc.sudeste
   name     = "nixos-instance"
-
-  machine_type = {
-    name = var.instance_type
-  }
-
-  image = {
-    name = data.mgc_virtual_machine_instances_images.ubuntu.name
-  }
-
-  network = {
-    vpc = {
-      id = mgc_virtual_machine_instances_networks.vpc.id
-    }
-    associate_public_ip = true
-    delete_public_ip    = false
-    interface = {
-      security_groups = [
-        {
-          id = mgc_virtual_machine_instances_security_groups.nixos_sg.id
-        }
-      ]
-    }
-  }
-
+  machine_type = var.instance_type
   ssh_key_name = mgc_ssh_keys.deploy_key.name
-
-  availability_zone = data.mgc_virtual_machine_instances_availability_zones.available.availability_zones[0]
+  image = var.initial_image
 }
 
-# Static/Elastic IP
-resource "mgc_network_public_ips" "static_ip" {
-  provider    = mgc.sudeste
-  description = "Static IP for NixOS instance"
-}
-
-# Associate Static IP with VM
-resource "mgc_network_public_ips_attach" "vm_ip" {
-  provider   = mgc.sudeste
-  public_ip  = mgc_network_public_ips.static_ip.id
-  type       = "virtual_machine_interface"
+# Associate IP -> VM
+resource "mgc_network_public_ips_attach" "aip" {
+  public_ip  = mgc_network_public_ips.ip.id
   network_id = mgc_virtual_machine_instances.nixos_vm.network.interface.id
+  type       = "virtual_machine_interface"
+}
+
+resource "mgc_virtual_machine_interface_attach" "attach_vm" {
+  instance_id  = mgc_virtual_machine_instances.nixos_vm.id
+  interface_id = mgc_network_vpcs_interfaces.vpci.id
 }
 
 # Wait for SSH to be ready

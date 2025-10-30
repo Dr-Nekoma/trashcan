@@ -23,12 +23,14 @@ in
         ports = [ 22 ];
         settings = {
           PasswordAuthentication = false;
-          AllowUsers = [ "root" ] ++ everyone;
+          # AllowUsers = [ "root" ] ++ everyone;
           X11Forwarding = false;
           # "yes", "without-password", "prohibit-password", "forced-commands-only", "no"
           PermitRootLogin = "prohibit-password";
         };
       };
+
+      networking.firewall.allowedTCPPorts = [ 22 ];
     })
 
     (mkIf impermanence_module.enable {
