@@ -7,6 +7,23 @@
 let
   cfg = config.modules.impermanence;
   disko_module = config.modules.disko;
+  defaultDirectories = {
+    directories = [
+      "Code"
+      {
+        directory = ".gnupg";
+        mode = "0700";
+      }
+      {
+        directory = ".ssh";
+        mode = "0700";
+      }
+    ];
+    files = [
+      ".bash_history"
+    ];
+  };
+
   inherit (lib)
     mkEnableOption
     mkIf
@@ -28,8 +45,6 @@ in
 
   config = mkIf cfg.enable (mkMerge [
     ({
-      # FS setup
-      fileSystems."${cfg.directory}".neededForBoot = true;
       # Workaround for the following service failing with a bind mount for /etc/machine-id
       # see: https://github.com/nix-community/impermanence/issues/229
       # boot.initrd.systemd.suppressedUnits = [ "systemd-machine-id-commit.service" ];
@@ -51,23 +66,11 @@ in
           "/var/lib/id_ed25519"
         ];
         users = {
-          bene = {
-            directories = [
-              "Code"
-              "Documents"
-              {
-                directory = ".gnupg";
-                mode = "0700";
-              }
-              {
-                directory = ".ssh";
-                mode = "0700";
-              }
-            ];
-            files = [
-              ".zsh_history"
-            ];
-          };
+          bene = defaultDirectories;
+          lemos = defaultDirectories;
+          magueta = defaultDirectories;
+          marinho = defaultDirectories;
+          victor = defaultDirectories;
 
           deploy = {
             directories = [
@@ -88,10 +91,13 @@ in
           };
         };
       };
+
+      # Ensure impermanence's directory is needed as well
+      fileSystems."${cfg.directory}".neededForBoot = true;
     })
 
+    # Optional: additional VM-specific logic
     (mkIf (disko_module.enable && disko_module.target == "vm") {
-      # For testing purposes with a local VM
       virtualisation.vmVariantWithDisko.virtualisation.fileSystems."${cfg.directory}".neededForBoot =
         true;
     })

@@ -94,7 +94,7 @@
               modules = bootstrapModules;
               specialArgs = {
                 hostId = hostId;
-                profile = "persistence";
+                profile = "ext4";
                 target = "vm";
               };
               format = "iso";
@@ -107,7 +107,7 @@
               modules = bootstrapModules;
               specialArgs = {
                 hostId = hostId;
-                profile = "persistence";
+                profile = "ext4";
                 target = "vm";
               };
               format = "qcow";
@@ -116,24 +116,29 @@
 
           # nix run
           apps = {
+            # https://github.com/nix-community/disko/blob/a5c4f2ab72e3d1ab43e3e65aa421c6f2bd2e12a1/docs/disko-images.md#test-the-image-inside-a-vm
             # nix run .#qemu
             qemu = {
               type = "app";
 
               program = "${pkgs.writeShellScript "run-vm.sh" ''
+                if [ -z "$1" ]; then
+                  echo "Usage: $0 <path-to-boot-image>"
+                  exit 1
+                fi
+
                 export NIX_DISK_IMAGE=$(mktemp -u -t nixos.XXXXXX.qcow2)
 
                 trap "rm -f $NIX_DISK_IMAGE" EXIT
-
-                cp ${self.packages.x86_64-linux.qemu}/nixos.qcow2 $NIX_DISK_IMAGE
-                chmod u+w $NIX_DISK_IMAGE
-
+                cp "$1" "$NIX_DISK_IMAGE"
                 ${pkgs.qemu}/bin/qemu-system-x86_64 \
-                  -drive file=$NIX_DISK_IMAGE,if=virtio \
-                  -m 2048 \
+                  -enable-kvm \
+                  -m 2G \
+                  -cpu max \
+                  -smp 2 \
                   -netdev user,id=net0,hostfwd=tcp::2222-:22 \
                   -device virtio-net-pci,netdev=net0 \
-                  -enable-kvm
+                  -drive "if=virtio,format=raw,file=$NIX_DISK_IMAGE"
               ''}";
             };
           };
@@ -166,6 +171,7 @@
                     scripts = {
                       apply.exec = "just apply";
                       bq.exec = "just bq";
+                      rq.exec = "just rq";
                       destroy.exec = "just destroy";
                       init.exec = "just init";
                       plan.exec = "just plan";
@@ -199,7 +205,7 @@
             modules = bootstrapModules;
             specialArgs = {
               hostId = hostId;
-              profile = "bootstrap";
+              profile = "ext4";
               target = "aws";
             };
           };
@@ -209,7 +215,7 @@
             modules = nekomaModules;
             specialArgs = {
               hostId = hostId;
-              profile = "persistence";
+              profile = "ext4";
               target = "aws";
             };
           };
@@ -222,7 +228,7 @@
             modules = bootstrapModules;
             specialArgs = {
               hostId = hostId;
-              profile = "bootstrap";
+              profile = "ext4";
               target = "mgc";
             };
           };
@@ -232,7 +238,7 @@
             modules = nekomaModules;
             specialArgs = {
               hostId = hostId;
-              profile = "persistence";
+              profile = "ext4";
               target = "mgc";
             };
           };
@@ -245,7 +251,7 @@
             modules = bootstrapModules;
             specialArgs = {
               hostId = hostId;
-              profile = "bootstrap";
+              profile = "ext4";
               target = "vm";
             };
           };
@@ -255,7 +261,7 @@
             modules = nekomaModules;
             specialArgs = {
               hostId = hostId;
-              profile = "persistence";
+              profile = "ext4";
               target = "vm";
             };
           };

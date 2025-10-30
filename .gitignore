@@ -100,3 +100,4 @@ result
 tofu/aws/outputs/*
 !tofu/aws/outputs/.gitkeep
 mg_cli
+*.raw

@@ -6,7 +6,7 @@
 }:
 
 let
-  cfg = config.modules.common;
+  cfg = config.modules.lyceum;
   impermanence_module = config.modules.impermanence;
   secrets_module = config.modules.secrets;
   inherit (lib)
@@ -40,6 +40,18 @@ in
     })
 
     (mkIf secrets_module.enable {
+      age = {
+        secrets = {
+          lyceum_erlang_cookie = {
+            file = ../secrets/lyceum_erlang_cookie.age;
+            # TODO: use the deploy user
+            # owner = config.systemd.services.postgresql.serviceConfig.User;
+            # group = config.systemd.services.postgresql.serviceConfig.Group;
+            mode = "444";
+          };
+        };
+      };
+
       systemd.services.erlang-cookie-setup = {
         description = "Setup an Erlang Node Cookie";
         wantedBy = [ "multi-user.target" ];
@@ -52,7 +64,7 @@ in
           Type = "oneshot";
           RemainAfterExit = true;
 
-          # Needs root to write to user's home directory
+          # Needs root to write to an user's home directory
           User = "root";
         };
 
@@ -74,7 +86,7 @@ in
 
             cat ${config.age.secrets.erlang_cookie.path} > ${cookieFile}
 
-            echo "Erlang cookie installed at ${cookieFile}"
+            echo "Erlang cookie installed at: ${cookieFile}"
           '';
       };
     })

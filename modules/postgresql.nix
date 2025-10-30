@@ -65,7 +65,7 @@ in
           maintenance_io_concurrency = 32;
         };
         extensions = with pg.pkgs; [
-          omnigres
+          # omnigres
           periods
           repmgr
         ];
@@ -85,21 +85,51 @@ in
     })
 
     (mkIf secrets_module.enable {
+      age = {
+        secrets = {
+          pg_bouncer_auth_file = {
+            file = ../secrets/pg_bouncer_auth_file.age;
+            owner = config.systemd.services.pgbouncer.serviceConfig.User;
+            group = config.systemd.services.pgbouncer.serviceConfig.Group;
+            mode = "440";
+          };
+
+          pg_user_lyceum = {
+            file = ../secrets/pg_user_lyceum.age;
+            owner = config.systemd.services.postgresql.serviceConfig.User;
+            group = config.systemd.services.postgresql.serviceConfig.Group;
+            mode = "440";
+          };
+
+          pg_user_migrations = {
+            file = ../secrets/pg_user_migrations.age;
+            owner = config.systemd.services.postgresql.serviceConfig.User;
+            group = config.systemd.services.postgresql.serviceConfig.Group;
+            mode = "440";
+          };
+        };
+      };
+
       services.pgbouncer = {
         enable = true;
-        poolMode = "transaction";
-        defaultPoolSize = 50;
-        listenAddress = "*";
-        listenPort = 6432;
-        authFile = config.age.secrets.pg_bouncer_auth_file.path;
-        databases = {
-          lyceum = "host=localhost port=5432 dbname=lyceum user=lyceum";
+
+        settings = {
+
+          databases = {
+            lyceum = "host=localhost port=5432 dbname=lyceum user=lyceum";
+          };
+
+          pgbouncer = {
+            authFile = config.age.secrets.pg_bouncer_auth_file.path;
+            defaultPoolSize = 25;
+            listenAddress = "*";
+            listenPort = 6432;
+            min_pool_size = 5;
+            max_client_conn = 300;
+            poolMode = "transaction";
+            reserve_pool_size = 5;
+          };
         };
-        extraConfig = ''
-          min_pool_size=5
-          max_client_conn=400
-          reserve_pool_size=5
-        '';
       };
 
       # Add passsword after pg starts

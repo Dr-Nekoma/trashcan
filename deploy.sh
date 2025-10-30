@@ -2,11 +2,13 @@
 
 set -euo pipefail
 
-TARGET_FLAKE="bootstrap"
+TARGET_FLAKE=${TARGET_FLAKE:-"bootstrap"}
+TARGET_PLATFORM=${TARGET_PLATFORM:-"aws"}
 TARGET_HOST=""
 
-DIR="$(pwd)/tofu/aws/outputs"
+DIR="$(pwd)/tofu/${TARGET_PLATFORM}/outputs"
 OUT_FILE="$DIR/output.json"
+HELP="Usage: $0 --target-flake <flake> --target-host <host> --target-platform <aws|mgc>"
 
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
@@ -14,12 +16,13 @@ while [[ "$#" -gt 0 ]]; do
             TARGET_FLAKE="$2"
             shift 2
             ;;
-        --target-host)
-            TARGET_HOST="$2"
+        --target-platform)
+            TARGET_PLATFORM="$2"
             shift 2
             ;;
         *)
             echo "Unknown option: $1"
+            echo "$HELP"
             exit 1
             ;;
     esac
@@ -34,9 +37,9 @@ if [[ -z "$TARGET_HOST" ]]; then
     fi
 fi
 
-echo "DEPLOYING FLAKE=$TARGET_FLAKE to TARGET=$TARGET_HOST"
+printf "\n\tDEPLOYING FLAKE=%s to TARGET=%s...\n" "$TARGET_FLAKE" "$TARGET_HOST"
 
 nix run nixpkgs#nixos-rebuild boot -- \
     --flake ".#$TARGET_FLAKE" \
-    --target-host "root@nixos" \
-    --fast --use-remote-sudo
+    --target-host "root@$TARGET_HOST" \
+    --verbose --fast --use-remote-sudo

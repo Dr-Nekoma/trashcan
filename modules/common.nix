@@ -47,7 +47,10 @@ in
 
       nix = {
         package = pkgs.nixVersions.stable;
-        settings.trusted-users = [ "@wheel" ];
+        settings.trusted-users = [
+          "root"
+          "@wheel"
+        ];
         extraOptions = ''
           experimental-features = nix-command flakes
         '';
@@ -59,6 +62,7 @@ in
         };
         optimise.automatic = true;
       };
+      security.sudo.wheelNeedsPassword = false;
 
       # Extra stuff
       # programs.zsh.enable = true;
@@ -75,16 +79,6 @@ in
     (mkIf (disko_module.enable && disko_module.target == "vm") {
       # Enable QEMU guest agent
       services.qemuGuest.enable = true;
-
-      # Boot configuration
-      boot.initrd.availableKernelModules = [
-        "ahci"
-        "xhci_pci"
-        "virtio_pci"
-        "sr_mod"
-        "virtio_blk"
-      ];
-      boot.kernelModules = [ ];
 
       # Disable automatic filesystem creation from nixos-generators
       system.build.qemuFormatOverride = true;

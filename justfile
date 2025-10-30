@@ -7,6 +7,7 @@ modules_dir := justfile_directory() + "/modules"
 tofu_dir := justfile_directory() + "/tofu/aws"
 secrets_dir := justfile_directory() + "/secrets"
 target_vm := env_var_or_default("TARGET_VM", "bootstrap")
+target_vm_memory := env_var_or_default("TARGET_VM_MEM", "2048")
 target_flake := env_var_or_default("TARGET_FLAKE", "bootstrap")
 release := `git tag -l --sort=-creatordate | head -n 1`
 replace := if os() == "linux" { "sed -i" } else { "sed -i '' -e" }
@@ -15,6 +16,7 @@ replace := if os() == "linux" { "sed -i" } else { "sed -i '' -e" }
 
 alias bi := build-iso
 alias bq := build-qemu
+alias rq := run-qemu
 
 # Lists all availiable targets
 default:
@@ -69,11 +71,11 @@ destroy:
     cd {{ tofu_dir }} && tofu apply -destroy -auto-approve
 
 # ----------------------------
-# Testing Commands
+# VM Commands
 # ----------------------------
 
 # Boot a QEMU VM, pointing to TARGET_VM
-boot_vm:
+run-qemu: build-qemu
     nix run -L '.#nixosConfigurations.{{ target_vm }}_vm.config.system.build.vmWithDisko'
 
 # ----------------------------
@@ -81,24 +83,13 @@ boot_vm:
 # ----------------------------
 
 # Deploy a NixOS VM (On AWS)
-deploy_vm_aws:
-    nix run nixpkgs#nixos-rebuild boot -- \
-        --flake ".#nekoma_aws" \
-        --target-host "nekoma_aws" \
-        --fast --use-remote-sudo
+deploy_aws:
+    @./deploy.sh \
+        --target-flake "nekoma_aws" \
+        --target-platform "aws"
 
 # Deploy a NixOS VM (On Magalu Cloud)
-deploy_vm_mgc:
-    nix run nixpkgs#nixos-rebuild boot -- \
-        --flake ".#nekoma_mgc" \
-        --target-host "nekoma_mgc" \
-        --fast --use-remote-sudo
-
-# ----------------------------
-# VM Commands
-# ----------------------------
-
-# Runs the QEMU VM
-run: build-qemu
-    export QEMU_NET_OPTS="user,id=net0,hostfwd=tcp::2222-:22"
-    result/bin/run-nixos-vm
+deploy_mgc:
+    @./deploy.sh \
+        --target-flake "nekoma_mgc" \
+        --target-platform "mgc"

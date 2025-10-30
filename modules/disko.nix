@@ -23,7 +23,7 @@ in
 
     profile = mkOption {
       type = lib.types.str;
-      description = "The target to use for the disko module. Can be either 'bootstrap' or 'persistence'.";
+      description = "The target to use for the disko module. Only 'ext4' is supported right now.";
     };
 
     target = mkOption {
@@ -34,6 +34,11 @@ in
 
   config = mkIf cfg.enable (mkMerge [
     (mkIf (cfg.target == "aws") {
+      boot.loader.grub = {
+        enable = true;
+        devices = lib.mkForce [ "/dev/nvme0n1" ];
+      };
+
       disko.devices = disko_settings.devices;
     })
 
@@ -46,31 +51,33 @@ in
         kernelModules = [ "kvm-intel" ];
       };
 
-      boot.loader.grub.devices = lib.mkForce ["/dev/vda"];
+      boot.loader.grub.devices = lib.mkForce [ "/dev/vda" ];
 
       disko.devices = disko_settings.devices;
     })
 
     (mkIf (cfg.target == "vm") {
-      boot.loader.grub.devices = lib.mkForce ["/dev/vda"];
+      boot.loader.grub.devices = lib.mkForce [ "/dev/vda" ];
+      boot.initrd.availableKernelModules = [
+        "ahci"
+        "xhci_pci"
+        "virtio_pci"
+        "sr_mod"
+        "virtio_blk"
+      ];
+      boot.kernelModules = [ ];
 
       disko.devices = disko_settings.devices;
 
       virtualisation.vmVariantWithDisko = {
-        virtualisation.fileSystems."/".neededForBoot = true;
+        # 40GB in Mb
+        virtualisation.diskSize = 40960;
+        # 4GB in Mb
+        virtualisation.memorySize = 4096;
+        # TODO: Check it layer how we can make this usable on MacOS
         # For running VM on macos: https://www.tweag.io/blog/2023-02-09-nixos-vm-on-macos/
         # virtualisation.host.pkgs = inputs.nixpkgs.legacyPackages.aarch64-darwin;
       };
-      # This is to make sure we use the same Labels as the
-      # qcow2 module from NixOS Generators.
-      # https://github.com/nix-community/nixos-generators/blob/master/formats/qcow-efi.nix#L26
-      # fileSystems."/" = {
-      #   device = mkForce "/dev/disk/by-label/nixos";
-      # };
-      # fileSystems."/boot" = {
-      #   device = mkForce "/dev/disk/by-label/ESP";
-      # };
-      # swapDevices = mkForce [ ];
     })
   ]);
 }
