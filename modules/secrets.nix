@@ -88,12 +88,6 @@ in
           ];
         };
       })
-      # Or if we have disko with the "vm" setup
-      # (mkIf (disko_module.enable && disko_module.target == "vm") {
-      #   virtualisation.vmVariantWithDisko.agenix.age.identityPaths = [
-      #     "${impermanence_module.directory}/etc/agenix/server_key"
-      #   ];
-      # })
     ]))
     # Otherwise (impermanence being disabled)
     (mkIf (!impermanence_module.enable) {

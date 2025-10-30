@@ -40,9 +40,6 @@ in
       };
 
       disko.devices = disko_settings.devices;
-
-      # virtualisation.fileSystems."/".neededForBoot = true;
-      # virtualisation.fileSystems."/nix".neededForBoot = true;
     })
 
     (mkIf (cfg.target == "mgc") {
@@ -57,13 +54,9 @@ in
       boot.loader.grub.devices = lib.mkForce [ "/dev/vda" ];
 
       disko.devices = disko_settings.devices;
-
-      # virtualisation.fileSystems."/".neededForBoot = true;
-      # virtualisation.fileSystems."/nix".neededForBoot = true;
     })
 
     (mkIf (cfg.target == "vm") {
-      # Boot configuration
       boot.loader.grub.devices = lib.mkForce [ "/dev/vda" ];
       boot.initrd.availableKernelModules = [
         "ahci"
@@ -81,9 +74,7 @@ in
         virtualisation.diskSize = 40960;
         # 4GB in Mb
         virtualisation.memorySize = 4096;
-        # virtualisation.fileSystems."/".neededForBoot = true;
-        # virtualisation.fileSystems."/nix".neededForBoot = true;
-        # virtualisation.fileSystems."/persist".neededForBoot = true;
+        # TODO: Check it layer how we can make this usable on MacOS
         # For running VM on macos: https://www.tweag.io/blog/2023-02-09-nixos-vm-on-macos/
         # virtualisation.host.pkgs = inputs.nixpkgs.legacyPackages.aarch64-darwin;
       };
