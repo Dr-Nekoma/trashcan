@@ -32,7 +32,7 @@ If you dont have any keys setup already:
   cd ../secrets
   # Either, if you have a key in your agent
   agenix --rekey
-  # Or
+  # Or if you have keys not managed by the agent...
   agenix --rekey -i ../keys/your_private_key
 #+end_src
 
@@ -121,4 +121,3 @@ about Terraform anymore, all deploys can be done in pure Nix.
 + The Terraform-based bootstrap is a modification from the great setup found in the
   [[https://github.com/Gabriella439/nixos-in-production][NixOS in Production]] book.
 + The Magalu Cloud setup was inspired by [[https://github.com/Misterio77/hackathon-mgc-factorio-terraform][The Declarative Factorio]] repo.
-  
