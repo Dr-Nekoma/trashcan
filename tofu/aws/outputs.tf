@@ -10,7 +10,12 @@ resource "local_file" "output" {
   filename = "${path.module}/outputs/output.json"
 }
 
+output "static_ip" {
+  description = "Static IP of the Instance:"
+  value       = "IP = ${aws_eip.eip.public_ip}"
+}
+
 output "ssh_command" {
   description = "SSH command to connect to the instance"
-  value       = "ssh -i outputs/id_ed25519 root@${aws_eip.eip.public_dns}"
+  value       = "ssh -i ./tofu/aws/outputs/id_ed25519 root@${aws_eip.eip.public_dns}"
 }
