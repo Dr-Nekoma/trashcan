@@ -56,7 +56,6 @@ in
           "/var/lib/nixos"
           "/var/lib/postgresql"
           "/var/lib/tailscale"
-          "/var/lib/secrets"
           "/var/lib/systemd/coredump"
           "/var/log"
         ];
@@ -65,7 +64,6 @@ in
           # file you won't be able to easily use journalctl to look at journals for
           # previous boots.
           "/etc/machine-id"
-          "/var/lib/id_ed25519"
         ];
         users = {
           bene = defaultDirectories;

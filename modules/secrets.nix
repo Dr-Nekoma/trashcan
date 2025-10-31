@@ -62,7 +62,6 @@ in
           #
           # This tells `agenix` where to look for the private key.
           identityPaths = [
-            "${impermanence_module.directory}/etc/ssh/id_ed25519"
             "${impermanence_module.directory}/etc/ssh/ssh_host_ed25519_key"
             "${impermanence_module.directory}/etc/ssh/ssh_host_rsa_key"
           ]
@@ -70,11 +69,11 @@ in
         };
 
         # Agenix Keys
-        environment.persistence."${impermanence_module.directory}" = {
-          directories = [
-            "/etc/agenix"
-          ];
-        };
+        # environment.persistence."${impermanence_module.directory}" = {
+        #   directories = [
+        #     "/etc/agenix"
+        #   ];
+        # };
       }
     ]))
     # Otherwise (impermanence being disabled)
