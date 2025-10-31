@@ -2,6 +2,7 @@
   lib,
   config,
   modulesPath,
+  pkgs,
   ...
 }:
 
@@ -33,13 +34,15 @@ in
   };
 
   config = mkIf cfg.enable (mkMerge [
+    ({
+      disko.devices = disko_settings.devices;
+    })
+
     (mkIf (cfg.target == "aws") {
       boot.loader.grub = {
         enable = true;
         devices = lib.mkForce [ "/dev/nvme0n1" ];
       };
-
-      disko.devices = disko_settings.devices;
     })
 
     (mkIf (cfg.target == "mgc") {
@@ -52,8 +55,6 @@ in
       };
 
       boot.loader.grub.devices = lib.mkForce [ "/dev/vda" ];
-
-      disko.devices = disko_settings.devices;
     })
 
     (mkIf (cfg.target == "vm") {
@@ -66,8 +67,6 @@ in
         "virtio_blk"
       ];
       boot.kernelModules = [ ];
-
-      disko.devices = disko_settings.devices;
 
       virtualisation.vmVariantWithDisko = {
         # 40GB in Mb

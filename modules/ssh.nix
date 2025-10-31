@@ -27,10 +27,15 @@ in
           X11Forwarding = false;
           # "yes", "without-password", "prohibit-password", "forced-commands-only", "no"
           PermitRootLogin = "prohibit-password";
+          # Useful when testing locally
+          LogLevel = "DEBUG";
         };
       };
+
+      networking.firewall.allowedTCPPorts = [ 22 ];
     })
 
+    # Optional behavior if impermanence is enabled
     (mkIf impermanence_module.enable {
       services.openssh = {
         hostKeys = [

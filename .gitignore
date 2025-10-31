@@ -98,6 +98,8 @@ result
 
 # Extras
 tofu/aws/outputs/*
+tofu/mgc/outputs/*
 !tofu/aws/outputs/.gitkeep
+!tofu/mgc/outputs/.gitkeep
 mg_cli
 *.raw

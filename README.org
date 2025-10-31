@@ -93,17 +93,31 @@ You can also build an ~.iso~ to test with different tools.
 
 *** Provisioning with Terraform
 
+**** AWS
+
 #+begin_src shell
-  plan
-  # or 'just plan'
-  apply
-  # or 'just apply' 
+  just plan "aws"
+  # or 'pa'
+  # followed by
+  just apply "aws"
+  # or 'aa'
   # if you need to nuke the infra as well
-  destroy
-  # or 'just destroy' 
+  just destroy "aws"
+  # or 'da' 
 #+end_src
 
-After the initial terraform deploy.
+**** Magalu Cloudu
+
+#+begin_src shell
+  just plan "mgc"
+  # or 'pm'
+  # followed by
+  just apply "mgc"
+  # or 'am'
+  # if you need to nuke the infra as well
+  just destroy "mgc"
+  # or 'dm' 
+#+end_src
 
 *** Deploying with Nix
 

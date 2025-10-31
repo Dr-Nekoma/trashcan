@@ -1,8 +1,30 @@
+# ===============
+# MGC Variables
+# ===============
+variable "mgc_api_key" {
+  description = "API key to use with the provider."
+  sensitive = true
+  type = string
+}
+
+variable "mgc_region" {
+  description = "Specifies the region where resources will be created and managed."
+  default = "br-se1"
+}
+
+# ===============
+# VM Variables
+# ===============
 variable "instance_type" {
   description = "Instance type for the VM"
   type        = string
   # Options: cloud-bs1.xsmall, cloud-bs1.small, cloud-bs1.medium, etc.
   default = "cloud-bs1.xsmall"
+}
+
+variable "initial_image" {
+  type        = string
+  default = "cloud-ubuntu-24.04 LTS"
 }
 
 variable "disk_size" {

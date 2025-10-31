@@ -53,15 +53,17 @@ in
         hideMounts = true;
         directories = [
           "/etc/NetworkManager/system-connections"
-          "/etc/ssh"
           "/var/lib/nixos"
           "/var/lib/postgresql"
           "/var/lib/tailscale"
           "/var/lib/secrets"
+          "/var/lib/systemd/coredump"
           "/var/log"
         ];
-        # Files to persist
         files = [
+          # machine-id is used by systemd for the journal, if you don't persist this
+          # file you won't be able to easily use journalctl to look at journals for
+          # previous boots.
           "/etc/machine-id"
           "/var/lib/id_ed25519"
         ];

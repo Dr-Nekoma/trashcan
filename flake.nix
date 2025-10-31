@@ -169,12 +169,22 @@
                     ];
 
                     scripts = {
-                      apply.exec = "just apply";
+                      # TOFU commands
+                      ## Init
+                      ia.exec = "just init aws";
+                      im.exec = "just init mgc";
+                      ## Plan
+                      pa.exec = "just plan aws";
+                      pm.exec = "just plan mgc";
+                      ## Apply
+                      aa.exec = "just apply aws";
+                      am.exec = "just apply mgc";
+                      ## Destroy
+                      da.exec = "just destroy aws";
+                      dm.exec = "just destroy mgc";
+                      # VM commands
                       bq.exec = "just bq";
                       rq.exec = "just rq";
-                      destroy.exec = "just destroy";
-                      init.exec = "just init";
-                      plan.exec = "just plan";
                     };
 
                     languages.opentofu = {
@@ -182,7 +192,7 @@
                     };
 
                     enterShell = ''
-                      Adding the Magalu CLI to $PATH
+                      echo "Adding the Magalu CLI to \$PATH"
                       export PATH="$(pwd)/mg_cli:$PATH"
                     '';
                   }
