@@ -3,13 +3,13 @@
 # ===============
 variable "mgc_api_key" {
   description = "API key to use with the provider."
-  sensitive = true
-  type = string
+  sensitive   = true
+  type        = string
 }
 
 variable "mgc_region" {
   description = "Specifies the region where resources will be created and managed."
-  default = "br-se1"
+  default     = "br-se1"
 }
 
 # ===============
@@ -23,7 +23,7 @@ variable "instance_type" {
 }
 
 variable "initial_image" {
-  type        = string
+  type    = string
   default = "cloud-ubuntu-24.04 LTS"
 }
 

@@ -29,7 +29,7 @@ in
   config = mkIf cfg.enable (mkMerge [
     ({
       networking = {
-        # I don't like it, but we need to fix the game
+        # I don't like it, but we need to fix the game's server
         # before disabling this.
         # https://github.com/Dr-Nekoma/lyceum/issues/66
         firewall = {
@@ -44,10 +44,9 @@ in
         secrets = {
           lyceum_erlang_cookie = {
             file = ../secrets/lyceum_erlang_cookie.age;
-            # TODO: use the deploy user
-            # owner = config.systemd.services.postgresql.serviceConfig.User;
-            # group = config.systemd.services.postgresql.serviceConfig.Group;
-            mode = "444";
+            owner = cfg.user;
+            group = "users";
+            mode = "440";
           };
         };
       };

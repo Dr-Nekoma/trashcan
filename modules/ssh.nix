@@ -27,8 +27,6 @@ in
           X11Forwarding = false;
           # "yes", "without-password", "prohibit-password", "forced-commands-only", "no"
           PermitRootLogin = "prohibit-password";
-          # Useful when testing locally
-          LogLevel = "DEBUG";
         };
       };
 
@@ -37,6 +35,7 @@ in
 
     # Optional behavior if impermanence is enabled
     (mkIf impermanence_module.enable {
+      # https://discourse.nixos.org/t/how-to-define-actual-ssh-host-keys-not-generate-new/31775/8
       services.openssh = {
         hostKeys = [
           {

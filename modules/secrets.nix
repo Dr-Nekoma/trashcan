@@ -1,6 +1,7 @@
 {
   lib,
   config,
+  pkgs,
   ...
 }:
 
@@ -9,6 +10,8 @@ let
   disko_module = config.modules.disko;
   impermanence_module = config.modules.impermanence;
   postgresql_module = config.modules.postgresql;
+
+  default_prefix = if impermanence_module.enable then impermanence_module.directory else "";
 
   inherit (lib)
     mkEnableOption
@@ -29,65 +32,88 @@ in
 
   config = mkIf cfg.enable (mkMerge [
     ({
-      # Agenix setup
+      age = {
+        # Private key of the SSH key pair. This is the other pair of what was supplied
+        # in `secrets.nix`.
+        #
+        # This tells `agenix` where to look for the private key.
+        identityPaths = [
+          "${default_prefix}/var/lib/agenix/id_ed25519"
+        ]
+        ++ cfg.paths;
+      };
+    })
+
+    # PostgreSQL
+    (mkIf (postgresql_module.enable) {
       age = {
         secrets = {
-          server_ssh = {
-            file = ../secrets/server_ssh.age;
-            path = "/etc/agenix/server_ssh";
+          pg_bouncer_auth_file = {
+            file = ../secrets/pg_bouncer_auth_file.age;
+            owner = config.systemd.services.pgbouncer.serviceConfig.User;
+            group = config.systemd.services.pgbouncer.serviceConfig.Group;
+            mode = "440";
+          };
+
+          pg_user_lyceum = {
+            file = ../secrets/pg_user_lyceum.age;
+            owner = config.systemd.services.postgresql.serviceConfig.User;
+            group = config.systemd.services.postgresql.serviceConfig.Group;
+            mode = "440";
+          };
+
+          pg_user_migrations = {
+            file = ../secrets/pg_user_migrations.age;
+            owner = config.systemd.services.postgresql.serviceConfig.User;
+            group = config.systemd.services.postgresql.serviceConfig.Group;
+            mode = "440";
           };
         };
       };
 
-      # SSH
-      services.openssh = {
-        hostKeys = [
-          {
-            type = "ed25519";
-            path = config.age.secrets.server_ssh.path;
-          }
-        ];
-      };
-    })
+      # Add passswords after pg starts
+      # https://discourse.nixos.org/t/assign-password-to-postgres-user-declaratively/9726/3
+      systemd.services.postgresql.postStart =
+        let
+          pg_lyceum_user = config.age.secrets.pg_user_lyceum.path;
+          pg_migration_user = config.age.secrets.pg_user_migrations.path;
+        in
+        ''
+          # Wait for PostgreSQL to be fully ready
+          until ${postgresql_module.package}/bin/pg_isready -q; do
+            sleep 1
+          done
 
-    # Impermance-based configs
-    # https://discourse.nixos.org/t/how-to-define-actual-ssh-host-keys-not-generate-new/31775/8
-    # If persistence is enabled
-    (mkIf (impermanence_module.enable) (mkMerge [
-      {
-        # Age
-        age = {
-          # Private key of the SSH key pair. This is the other pair of what was supplied
-          # in `secrets.nix`.
-          #
-          # This tells `agenix` where to look for the private key.
-          identityPaths = [
-            "${impermanence_module.directory}/etc/ssh/id_ed25519"
-            "${impermanence_module.directory}/etc/ssh/ssh_host_ed25519_key"
-            "${impermanence_module.directory}/etc/ssh/ssh_host_rsa_key"
-          ]
-          ++ (map (x: "${impermanence_module.directory}${x}") cfg.paths);
-        };
+          ${postgresql_module.package}/bin/psql -tA <<'EOF'
+            DO $$
+            DECLARE lyceum_password TEXT;
+            DECLARE migrations_password TEXT;
+            BEGIN
+              -- Read and set lyceum password
+              lyceum_password := trim(both from replace(pg_read_file('${pg_lyceum_user}'), E'\n', '''));
+              EXECUTE format('ALTER USER lyceum WITH PASSWORD %L;', lyceum_password);
 
-        # Agenix Keys
-        environment.persistence."${impermanence_module.directory}" = {
-          directories = [
-            "/etc/agenix"
-          ];
+              -- Read and set migrations password
+              migrations_password := trim(both from replace(pg_read_file('${pg_migration_user}'), E'\n', '''));
+              EXECUTE format('ALTER USER migrations WITH PASSWORD %L;', migrations_password);
+
+              -- Grant permissions to migrations user
+              GRANT CONNECT ON DATABASE lyceum TO migrations;
+              GRANT CREATE ON DATABASE lyceum TO migrations;
+
+              -- Grant default privileges for future schemas created by migrations user
+              ALTER DEFAULT PRIVILEGES FOR ROLE migrations GRANT ALL ON TABLES TO migrations;
+              ALTER DEFAULT PRIVILEGES FOR ROLE migrations GRANT ALL ON SEQUENCES TO migrations;
+            END $$;
+          EOF
+        '';
+
+      services.pgbouncer.settings = {
+        pgbouncer = {
+          auth_file = config.age.secrets.pg_bouncer_auth_file.path;
         };
-      }
-    ]))
-    # Otherwise (impermanence being disabled)
-    (mkIf (!impermanence_module.enable) {
-      # Age
-      age = {
-        identityPaths = [
-          "/etc/ssh/id_ed25519"
-          "/etc/ssh/ssh_host_ed25519_key"
-          "/etc/ssh/ssh_host_rsa_key"
-        ]
-        ++ cfg.paths;
       };
+
     })
   ]);
 }

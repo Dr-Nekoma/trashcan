@@ -194,6 +194,11 @@
                     enterShell = ''
                       echo "Adding the Magalu CLI to \$PATH"
                       export PATH="$(pwd)/mg_cli:$PATH"
+                      # Some Extra QEMU envars that are useful when doing local testing
+                      export QEMU_KERNEL_PARAMS="console=ttyS0"
+                      # Options to foward 
+                      #   host 2222 -> vm 22
+                      export QEMU_NET_OPTS="hostfwd=tcp:127.0.0.1:2222-:22"
                     '';
                   }
                 )

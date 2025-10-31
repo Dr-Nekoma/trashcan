@@ -30,12 +30,10 @@ resource "aws_instance" "vm" {
   subnet_id                   = aws_subnet.public.id
   vpc_security_group_ids      = [aws_security_group.vm.id]
 
-  # user_data = <<-EOF
-  #   #!/usr/bin/env bash
-  #   (umask 377; echo '${tls_private_key.ssh_key.private_key_openssh}' > /persist/etc/ssh/id_ed25519)
-  #   echo '${tls_private_key.ssh_key.public_key_openssh}' > /root/.ssh/authorized_keys
-  #   chmod 600 /root/.ssh/authorized_keys
-  # EOF
+  user_data = <<-EOF
+    #!/bin/sh
+    (umask 377; echo '${tls_private_key.nixos-in-production.private_key_openssh}' > /var/lib/agenix/id_ed25519)
+  EOF
 
   root_block_device {
     volume_size = var.instance_root_volume_size_in_gb
@@ -72,43 +70,7 @@ resource "null_resource" "wait" {
   }
 }
 
-# module "nixos_anywhere" {
-#   source                 = "github.com/nix-community/nixos-anywhere//terraform/all-in-one"
-#   nixos_system_attr      = "${var.flake_path}#nixosConfigurations.${var.flake_system}.config.system.build.toplevel"
-#   nixos_partitioner_attr = "${var.flake_path}#nixosConfigurations.${var.flake_system}.config.system.build.diskoScript"
-#   instance_id            = aws_instance.vm.id
-#   target_host            = aws_eip.eip.public_ip
-#   install_ssh_key        = nonsensitive(tls_private_key.ssh_key.private_key_openssh)
-#   deployment_ssh_key     = nonsensitive(tls_private_key.ssh_key.private_key_openssh)
-#
-#   phases = [
-#     "kexec",
-#     "disko",
-#     "install",
-#     "reboot"
-#   ]
-#
-#   special_args = {
-#     terraform_ssh_public_key = tls_private_key.ssh_key.public_key_openssh
-#   }
-#
-#   debug_logging = true
-#   build_on_remote = false
-#
-#   depends_on = [
-#     null_resource.wait
-#   ]
-# }
-
-# module "nixos" {
-#   source      = "github.com/Gabriella439/terraform-nixos-ng//nixos?ref=af1a0af57287851f957be2b524fcdc008a21d9ae"
-#   host        = "root@${aws_eip.eip.public_ip}"
-#   flake       = "${var.flake_path}#nixosConfigurations.${var.flake_system}
-#   arguments   = []
-#   ssh_options = "-o StrictHostKeyChecking=accept-new -i ${local_sensitive_file.ssh_private_key.filename}"
-#   depends_on  = [null_resource.wait]
-# }
-
+# Installs our Custom NixOS configuration
 module "system_build" {
   source        = "github.com/nix-community/nixos-anywhere//terraform/nix-build"
   attribute     = "${var.flake_path}#nixosConfigurations.${var.flake_system}.config.system.build.toplevel"

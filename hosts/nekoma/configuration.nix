@@ -5,19 +5,9 @@
   modulesPath,
   profile,
   target,
-  specialArgs,
   ...
 }:
 let
-  keys = import ../../keys;
-  allKeys = keys.allKeys keys.systems keys.users;
-  everyone =
-    (
-      # Add terraform managed ssh key, if present
-      lib.optional (specialArgs ? terraform_ssh_key) specialArgs.terraform_ssh_key
-    )
-    ++ allKeys;
-
   extraImports = {
     "aws" = [
       "${modulesPath}/virtualisation/amazon-image.nix"
@@ -62,7 +52,6 @@ in
 
   modules.secrets = {
     enable = true;
-    paths = everyone;
   };
 
   modules.lyceum = {
