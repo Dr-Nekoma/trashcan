@@ -53,16 +53,27 @@ in
         hideMounts = true;
         directories = [
           "/etc/NetworkManager/system-connections"
-          "/etc/ssh"
+          # "/etc/ssh"
+          # "/etc/sshd"
           "/var/lib/nixos"
           "/var/lib/postgresql"
           "/var/lib/tailscale"
           "/var/lib/secrets"
+          "/var/lib/systemd/coredump"
           "/var/log"
         ];
         files = [
+          # machine-id is used by systemd for the journal, if you don't persist this
+          # file you won't be able to easily use journalctl to look at journals for
+          # previous boots.
           "/etc/machine-id"
           "/var/lib/id_ed25519"
+          # Host keys
+          # "/etc/ssh/ssh_host_ed25519_key"
+          # "/etc/ssh/ssh_host_ed25519_key.pub"
+          # "/etc/ssh/ssh_host_rsa_key"
+          # "/etc/ssh/ssh_host_rsa_key.pub"
+          # "/etc/ssh/sshd_config"
         ];
         users = {
           bene = defaultDirectories;
