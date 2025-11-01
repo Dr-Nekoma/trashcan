@@ -5,16 +5,16 @@ resource "mgc_network_vpc" "vpc" {
 }
 
 resource "mgc_network_vpcs_interfaces" "vpci" {
-    name = "vpci-nekoma"
-    vpc_id = mgc_network_vpcs.vpc.id
+  name   = "vpci-nekoma"
+  vpc_id = mgc_network_vpcs.vpc.id
 }
 
 # Public Subnet
 resource "mgc_network_subnet" "net_pub" {
-  name        = "snet-nekoma"
-  vpc_id      = mgc_network_vpc.vpc.id
-  cidr_block  = "10.0.1.0/24"
-  
+  name       = "snet-nekoma"
+  vpc_id     = mgc_network_vpc.vpc.id
+  cidr_block = "10.0.1.0/24"
+
   # Enable auto-assign public IP for instances in this subnet
   map_public_ip_on_launch = true
 }
@@ -50,5 +50,5 @@ resource "mgc_network_security_group_rules" "allow_epmd" {
 
 # Public IPs
 resource "mgc_network_public_ips" "ip" {
-  vpc_id      = mgc_network_vpc.vpc.id
+  vpc_id = mgc_network_vpc.vpc.id
 }

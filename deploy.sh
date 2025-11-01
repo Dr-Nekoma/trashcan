@@ -3,11 +3,9 @@
 set -euo pipefail
 
 TARGET_FLAKE=${TARGET_FLAKE:-"bootstrap"}
-TARGET_PLATFORM=${TARGET_PLATFORM:-"aws"}
+TARGET_PLATFORM=${TARGET_PLATFORM:-"vm"}
 TARGET_HOST=""
-
-DIR="$(pwd)/tofu/${TARGET_PLATFORM}/outputs"
-OUT_FILE="$DIR/output.json"
+TARGET_SSH_FILE="/var/lib/agenix/id_ed25519"
 HELP="Usage: $0 --target-flake <flake> --target-host <host> --target-platform <aws|mgc>"
 
 while [[ "$#" -gt 0 ]]; do
@@ -28,18 +26,29 @@ while [[ "$#" -gt 0 ]]; do
     esac
 done
 
-if [[ -z "$TARGET_HOST" ]]; then
-    if [[ -f "$OUT_FILE" ]]; then
-        TARGET_HOST=$(jq --raw-output '.public_dns' "$OUT_FILE")
-    else
-        echo "Usage: $0 --target-flake <flake> --target-host <host>"
+case "${TARGET_PLATFORM}" in
+    "aws")
+        TARGET_HOST="nekoma_aws"
+        ;;
+    "mgc")
+        TARGET_HOST="nekoma_mgc"
+        ;;
+    "vm")
+        TARGET_HOST="nekoma_vm"
+        ;;
+    *)
+        echo "$HELP"
         exit 1
-    fi
-fi
+        ;;
+esac
 
-printf "\n\tDEPLOYING FLAKE=%s to TARGET=%s...\n" "$TARGET_FLAKE" "$TARGET_HOST"
+rsync -avz --chown root:root "$HOME/.ssh/trashcan_server" $TARGET_HOST:$TARGET_SSH_FILE
 
-nix run nixpkgs#nixos-rebuild boot -- \
+printf "\n\tDEPLOYING FLAKE=%s to TARGET=%s\n\n" "$TARGET_FLAKE" "$TARGET_HOST"
+
+nix run nixpkgs#nixos-rebuild switch -- \
+    -j auto \
+    --use-remote-sudo \
     --flake ".#$TARGET_FLAKE" \
-    --target-host "root@$TARGET_HOST" \
-    --verbose --fast --use-remote-sudo
+    --build-host localhost \
+    --target-host "$TARGET_HOST"

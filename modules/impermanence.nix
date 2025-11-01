@@ -2,6 +2,7 @@
 {
   lib,
   config,
+  specialArgs,
   ...
 }:
 let
@@ -53,6 +54,10 @@ in
         hideMounts = true;
         directories = [
           "/etc/NetworkManager/system-connections"
+          # This is the directory where we'll dump a private key
+          # that will need to be used for "stage 2", when agenix
+          # is enabled and requires a key to unlock the secrets.
+          "/var/lib/agenix"
           "/var/lib/nixos"
           "/var/lib/postgresql"
           "/var/lib/tailscale"

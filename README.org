@@ -80,6 +80,8 @@ When inside the VM, check if a few services are running fine:
 
 #+begin_src shell
   systemctl status sshd.service
+  # or if you're building a configuration with PostgreSQL available
+  sudo --user postgres psql
 #+end_src
 
 Add the following to your ~$HOME/.ssh/config~:

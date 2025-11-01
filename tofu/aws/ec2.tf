@@ -30,12 +30,10 @@ resource "aws_instance" "vm" {
   subnet_id                   = aws_subnet.public.id
   vpc_security_group_ids      = [aws_security_group.vm.id]
 
-  # user_data = <<-EOF
-  #   #!/usr/bin/env bash
-  #   (umask 377; echo '${tls_private_key.ssh_key.private_key_openssh}' > /persist/etc/ssh/id_ed25519)
-  #   echo '${tls_private_key.ssh_key.public_key_openssh}' > /root/.ssh/authorized_keys
-  #   chmod 600 /root/.ssh/authorized_keys
-  # EOF
+  user_data = <<-EOF
+    #!/bin/sh
+    (umask 377; echo '${tls_private_key.nixos-in-production.private_key_openssh}' > /var/lib/agenix/id_ed25519)
+  EOF
 
   root_block_device {
     volume_size = var.instance_root_volume_size_in_gb
