@@ -4,12 +4,12 @@
 #+html: <a href="https://github.com/Dr-Nekoma/trashcan/actions/workflows/qemu_build.yml"><img alt="[QEMU] Build" src="https://github.com/Dr-Nekoma/trashcan/actions/workflows/qemu_build.yml/badge.svg" /></a>
 
 This repository contains the server configuration to host applications from
-[[https://github.com/Dr-Nekoma][Dr. Nekoma]] and[[https://github.com/dont-rely-on-nulls][ Don't Rely on Nulls]]. We currently host the following projects in it:
+[[https://github.com/Dr-Nekoma][Dr. Nekoma]] and [[https://github.com/dont-rely-on-nulls][Don't Rely on Nulls]]. We currently host the following projects in it:
 
 + [[https://github.com/Dr-Nekoma/lyceum][Lyceum]]
 
-This is also an ongoing experiment mixing different tools, like[[https://nixos.org/][ Nix/NixOS]] (and
-[[https://devenv.sh/][devenv]]),[[https://opentofu.org/][ OpenTofu]] and [[https://github.com/terrateamio/terrateam][Terrateam]], to name a few.
+This is also an ongoing experiment mixing different tools, like [[https://nixos.org/][Nix/NixOS]] (and
+[[https://devenv.sh/][devenv]]), [[https://opentofu.org/][OpenTofu]] and [[https://github.com/terrateamio/terrateam][Terrateam]], to name a few.
 
 ** Developmennt
 
@@ -27,13 +27,31 @@ Enter the Nix shell via the cli, or leverage direnv:
 If you dont have any keys setup already:
 
 #+begin_src shell
-  cd keys
+  cd $HOME/.ssh
   ssh-keygen -t ed25519 -C "your.email@gmail.com"
-  cd ../secrets
-  # Either, if you have a key in your agent
+#+end_src
+
+Then go back to this project and proceed to:
+
+1. Modify the [[./keys/default.nix]] file, add your user and public key there,
+   follow the same standard provided by the file.
+2. If you also want to add a new secret, modify the [[./secrets/secrets.nix]]. Make
+   sure to use "~everyone~" as the public keys.
+
+  #+begin_src shell
+    # Either you already have a key in your SSH agent
+    agenix -e "my_secret.age"
+    # Or if you don't have keys managed by an agent...
+    agenix -e "my_secret.age" -i ~/.ssh/your_private_key
+  #+end_src
+
+3. Then, rekey everything.
+
+#+begin_src shell
+  # Either this...
   agenix --rekey
-  # Or if you have keys not managed by the agent...
-  agenix --rekey -i ../keys/your_private_key
+  # Or...
+  agenix --rekey -i $HOME/.ssh/your_private_key
 #+end_src
 
 *** Qemu VM
@@ -62,6 +80,8 @@ When inside the VM, check if a few services are running fine:
 
 #+begin_src shell
   systemctl status sshd.service
+  # or if you're building a configuration with PostgreSQL available
+  sudo --user postgres psql
 #+end_src
 
 Add the following to your ~$HOME/.ssh/config~:
@@ -132,6 +152,6 @@ about Terraform anymore, all deploys can be done in pure Nix.
 
 * Acknowledgements
 
-+ The Terraform-based bootstrap is a modification from the great setup found in the
-  [[https://github.com/Gabriella439/nixos-in-production][NixOS in Production]] book.
-+ The Magalu Cloud setup was inspired by [[https://github.com/Misterio77/hackathon-mgc-factorio-terraform][The Declarative Factorio]] repo.
++ The initial Terraform-based (now Open Tofu) bootstrap is a modification from the great setup found in the
+  [[https://github.com/Gabriella439/nixos-in-production][NixOS in Production]] book, but was later heavily modified.
++ The Magalu Cloud setup was inspired by [[https://github.com/Misterio77/hackathon-mgc-factorio-terraform][the Declarative Factorio]] repo.

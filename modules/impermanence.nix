@@ -53,10 +53,13 @@ in
         hideMounts = true;
         directories = [
           "/etc/NetworkManager/system-connections"
+          # This is the directory where we'll dump a private key
+          # that will need to be used for "stage 2", when agenix
+          # is enabled and requires a key to unlock the secrets.
+          "/var/lib/agenix"
           "/var/lib/nixos"
           "/var/lib/postgresql"
           "/var/lib/tailscale"
-          "/var/lib/secrets"
           "/var/lib/systemd/coredump"
           "/var/log"
         ];
@@ -65,7 +68,6 @@ in
           # file you won't be able to easily use journalctl to look at journals for
           # previous boots.
           "/etc/machine-id"
-          "/var/lib/id_ed25519"
         ];
         users = {
           bene = defaultDirectories;

@@ -15,16 +15,16 @@ resource "local_file" "ssh_public_key" {
 }
 
 resource "mgc_ssh_keys" "deploy_key" {
-  name     = "nixos-deploy-key"
-  key      = tls_private_key.ssh_key.public_key_openssh
+  name = "nixos-deploy-key"
+  key  = tls_private_key.ssh_key.public_key_openssh
 }
 
 # VM Instances
 resource "mgc_virtual_machine_instances" "nixos_vm" {
-  name     = "nixos-instance"
+  name         = "nixos-instance"
   machine_type = var.instance_type
   ssh_key_name = mgc_ssh_keys.deploy_key.name
-  image = var.initial_image
+  image        = var.initial_image
 }
 
 # Associate IP -> VM

@@ -20,7 +20,7 @@ terraform {
 }
 
 provider "mgc" {
-  alias  = "sudeste"
-  region = var.mgc_region
+  alias   = "sudeste"
+  region  = var.mgc_region
   api_key = var.mgc_api_key
 }

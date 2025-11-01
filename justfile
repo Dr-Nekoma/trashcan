@@ -58,7 +58,7 @@ repl:
 # Resets the agenix file
 [group('age')]
 rekey:
-    cd {{ secrets_dir}} && nix run github:ryantm/agenix -- -r
+    cd {{ secrets_dir }} && nix run github:ryantm/agenix -- -r
 
 # ----------------------------
 # OpenTofu Commands
@@ -72,7 +72,7 @@ init tf_target:
 # Plan infra changes
 [group('tofu')]
 plan tf_target +VARS="":
-    cd "{{ tofu_dir }}/{{ tf_target }}" && tofu plan -out tfplan {{VARS}}
+    cd "{{ tofu_dir }}/{{ tf_target }}" && tofu plan -out tfplan {{ VARS }}
 
 # Provision infra changes
 [group('tofu')]
@@ -101,3 +101,9 @@ deploy_mgc:
     @./deploy.sh \
         --target-flake "nekoma_mgc" \
         --target-platform "mgc"
+
+[group('deploy')]
+deploy_qemu:
+    @./deploy.sh \
+        --target-flake "nekoma_vm" \
+        --target-platform "vm"

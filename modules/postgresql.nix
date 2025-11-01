@@ -7,17 +7,21 @@
 
 let
   cfg = config.modules.postgresql;
-  secrets_module = config.modules.secrets;
   pg = pkgs.postgresql_18;
   inherit (lib)
     mkEnableOption
     mkIf
     mkMerge
+    mkOption
     ;
 in
 {
   options.modules.postgresql = {
     enable = mkEnableOption "Enable/Disable custom PostgreSQL options";
+
+    package = mkOption {
+      default = pg;
+    };
   };
 
   config = mkIf cfg.enable (mkMerge [
@@ -39,6 +43,15 @@ in
             ensureDBOwnership = true;
             ensureClauses = {
               login = true;
+              createrole = true;
+            };
+          }
+
+          {
+            name = "migrations";
+            ensureClauses = {
+              login = true;
+              superuser = true;
               createrole = true;
             };
           }
@@ -74,42 +87,6 @@ in
         '';
       };
 
-      # haproxy
-      #services.haproxy = {
-      #  enable = true;
-      #};
-
-      services.keepalived = {
-        enable = true;
-      };
-    })
-
-    (mkIf secrets_module.enable {
-      age = {
-        secrets = {
-          pg_bouncer_auth_file = {
-            file = ../secrets/pg_bouncer_auth_file.age;
-            owner = config.systemd.services.pgbouncer.serviceConfig.User;
-            group = config.systemd.services.pgbouncer.serviceConfig.Group;
-            mode = "440";
-          };
-
-          pg_user_lyceum = {
-            file = ../secrets/pg_user_lyceum.age;
-            owner = config.systemd.services.postgresql.serviceConfig.User;
-            group = config.systemd.services.postgresql.serviceConfig.Group;
-            mode = "440";
-          };
-
-          pg_user_migrations = {
-            file = ../secrets/pg_user_migrations.age;
-            owner = config.systemd.services.postgresql.serviceConfig.User;
-            group = config.systemd.services.postgresql.serviceConfig.Group;
-            mode = "440";
-          };
-        };
-      };
-
       services.pgbouncer = {
         enable = true;
 
@@ -120,39 +97,36 @@ in
           };
 
           pgbouncer = {
-            authFile = config.age.secrets.pg_bouncer_auth_file.path;
-            defaultPoolSize = 25;
-            listenAddress = "*";
-            listenPort = 6432;
-            min_pool_size = 5;
+            default_pool_size = 25;
+            listen_addr = "*";
+            listen_port = 6432;
             max_client_conn = 300;
-            poolMode = "transaction";
+            max_db_connections = 20;
+            min_pool_size = 5;
+            pool_mode = "transaction";
             reserve_pool_size = 5;
           };
         };
       };
 
-      # Add passsword after pg starts
-      # https://discourse.nixos.org/t/assign-password-to-postgres-user-declaratively/9726/3
-      systemd.services.postgresql.postStart =
-        let
-          pg_lyceum_user = config.age.secrets.pg_user_lyceum.path;
-          pg_migratiton_user = config.age.secrets.pg_user_migrations.path;
-        in
-        ''
-          psql -tA <<'EOF'
-            DO $$
-            DECLARE lyceum_password TEXT;
-            DECLARE migrations_password TEXT;
-            BEGIN
-              lyceum_password := trim(both from replace(pg_read_file('${pg_lyceum_user}'), E'\n', '''));
-              EXECUTE format('ALTER USER lyceum WITH PASSWORD '''%s''';', lyceum_password);
+      # Make pgbouncer wait for postgresql to be fully configured
+      systemd.services.pgbouncer = {
+        after = [ "postgresql.service" ];
+        requires = [ "postgresql.service" ];
+        # Add a small delay to ensure pg's postStart has completed
+        serviceConfig = {
+          ExecStartPre = "${pkgs.coreutils}/bin/sleep 4";
+        };
+      };
 
-              migrations_password := trim(both from replace(pg_read_file('${pg_migratiton_user}'), E'\n', '''));
-              EXECUTE format('ALTER USER migrations WITH PASSWORD '''%s''';', migrations_password);
-            END $$;
-          EOF
-        '';
+      # haproxy
+      #services.haproxy = {
+      #  enable = true;
+      #};
+
+      services.keepalived = {
+        enable = true;
+      };
     })
   ]);
 }
