@@ -9,9 +9,15 @@ let
   cfg = config.modules.secrets;
   disko_module = config.modules.disko;
   impermanence_module = config.modules.impermanence;
+  lyceum_module = config.modules.lyceum;
   postgresql_module = config.modules.postgresql;
 
   default_prefix = if impermanence_module.enable then impermanence_module.directory else "";
+  lyceum_work_dir =
+    if impermanence_module.enable then
+      "${impermanence_module.directory}/home/${lyceum_module.user}"
+    else
+      "/home/${lyceum_module.user}";
 
   inherit (lib)
     mkEnableOption
@@ -44,6 +50,35 @@ in
       };
     })
 
+    # Lyceum
+    (mkIf lyceum_module.enable {
+      age = {
+        secrets = {
+          lyceum_erlang_cookie = {
+            file = ../secrets/lyceum_application_env.age;
+            owner = lyceum_module.user;
+            group = "users";
+            mode = "440";
+          };
+
+          lyceum_erlang_cookie = {
+            file = ../secrets/lyceum_erlang_cookie.age;
+            owner = lyceum_module.user;
+            group = "users";
+            mode = "440";
+            path = "${lyceum_work_dir}/.erlang.cookie";
+          };
+        };
+      };
+
+      # Make sure Lyceum's systemd service has the right envars
+      systemd.services.lyceum = {
+        serviceConfig = {
+          EnvironmentFile = config.age.secrets.lyceum_application_env.path;
+        };
+      };
+    })
+
     # PostgreSQL
     (mkIf (postgresql_module.enable) {
       age = {
@@ -57,6 +92,27 @@ in
 
           pg_user_lyceum = {
             file = ../secrets/pg_user_lyceum.age;
+            owner = config.systemd.services.postgresql.serviceConfig.User;
+            group = config.systemd.services.postgresql.serviceConfig.Group;
+            mode = "440";
+          };
+
+          pg_user_lyceum_application = {
+            file = ../secrets/pg_user_lyceum_application.age;
+            owner = config.systemd.services.postgresql.serviceConfig.User;
+            group = config.systemd.services.postgresql.serviceConfig.Group;
+            mode = "440";
+          };
+
+          pg_user_lyceum_auth = {
+            file = ../secrets/pg_user_lyceum_auth.age;
+            owner = config.systemd.services.postgresql.serviceConfig.User;
+            group = config.systemd.services.postgresql.serviceConfig.Group;
+            mode = "440";
+          };
+
+          pg_user_lyceum_mnesia = {
+            file = ../secrets/pg_user_lyceum_mnesi.age;
             owner = config.systemd.services.postgresql.serviceConfig.User;
             group = config.systemd.services.postgresql.serviceConfig.Group;
             mode = "440";

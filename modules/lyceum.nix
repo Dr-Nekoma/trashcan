@@ -2,13 +2,23 @@
   lib,
   config,
   pkgs,
+  lyceum,
   ...
 }:
 
 let
   cfg = config.modules.lyceum;
   impermanence_module = config.modules.impermanence;
-  secrets_module = config.modules.secrets;
+
+  # Get the lyceum server package from the flake input
+  lyceum_server = lyceum.packages.${pkgs.system}.server;
+
+  lyceum_work_dir =
+    if impermanence_module.enable then
+      "${impermanence_module.directory}/home/${cfg.user}"
+    else
+      "/home/${cfg.user}";
+
   inherit (lib)
     mkEnableOption
     mkIf
@@ -24,69 +34,90 @@ in
       type = lib.types.str;
       default = "deploy";
     };
+
+    epmd_port = mkOption {
+      type = lib.types.port;
+      default = 4369;
+      description = "Erlang Port Mapper Daemon port";
+    };
   };
 
   config = mkIf cfg.enable (mkMerge [
     ({
+      environment.systemPackages = [ lyceum_server ];
+
       networking = {
         # I don't like it, but we need to fix the game's server
         # before disabling this.
         # https://github.com/Dr-Nekoma/lyceum/issues/66
         firewall = {
-          allowedTCPPorts = [ 4369 ];
-          allowedUDPPorts = [ 4369 ];
-        };
-      };
-    })
-
-    (mkIf secrets_module.enable {
-      age = {
-        secrets = {
-          lyceum_erlang_cookie = {
-            file = ../secrets/lyceum_erlang_cookie.age;
-            owner = cfg.user;
-            group = "users";
-            mode = "440";
-          };
+          allowedTCPPorts = [
+            cfg.epmd_port
+          ];
+          allowedUDPPorts = [
+            cfg.epmd_port
+          ];
         };
       };
 
-      systemd.services.erlang-cookie-setup = {
-        description = "Setup an Erlang Node Cookie";
+      # Systemd services
+      systemd.services.lyceum = {
+        description = "Lyceum Game Server";
         wantedBy = [ "multi-user.target" ];
 
-        # Run after agenix secrets are available
-        after = [ "agenix.service" ];
-        wants = [ "agenix.service" ];
+        # Ensure dependencies are met
+        after = [
+          "agenix.service"
+          "network.target"
+          "postgresql.service"
+        ];
+        wants = [
+          "agenix.service"
+          "postgresql.service"
+        ];
+        requires = [
+          "agenix.service"
+          "postgresql.service"
+        ];
 
         serviceConfig = {
-          Type = "oneshot";
-          RemainAfterExit = true;
+          Type = "simple";
+          User = cfg.user;
+          Group = "users";
 
-          # Needs root to write to an user's home directory
-          User = "root";
+          # Path to the release
+          ExecStart = "${lyceum_server}/bin/lyceum foreground";
+
+          # Restart configuration
+          Restart = "always";
+          RestartSec = "10s";
+
+          # Security hardening
+          NoNewPrivileges = true;
+          PrivateTmp = true;
+          ProtectSystem = "strict";
+          ProtectHome = "read-only";
+
+          # Allow writing to runtime directory
+          RuntimeDirectory = "lyceum";
+          RuntimeDirectoryMode = "0755";
+
+          # Logs
+          StandardOutput = "journal";
+          StandardError = "journal";
+
+          # Resource limits
+          LimitNOFILE = "65536";
+
+          # Working directory
+          WorkingDirectory = "${lyceum_work_dir}/Apps";
         };
 
-        script =
-          let
-            homeDir =
-              if impermanence_module.enable then
-                "${impermanence_module.directory}/home/${cfg.user}"
-              else
-                "/home/${cfg.user}";
-            cookieFile = "${homeDir}/.erlang.cookie";
-          in
-          ''
-            # Ensure the home directory exists
-            if [ ! -d "${homeDir}" ]; then
-              echo "Home directory ${homeDir} does not exist"
-              exit 1
-            fi
-
-            cat ${config.age.secrets.erlang_cookie.path} > ${cookieFile}
-
-            echo "Erlang cookie installed at: ${cookieFile}"
-          '';
+        # Restart on failure with backoff
+        unitConfig = {
+          StartLimitBurst = 5;
+          StartLimitIntervalSec = 60;
+        };
       };
     })
   ]);
