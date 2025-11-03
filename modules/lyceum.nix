@@ -10,10 +10,11 @@ let
   impermanence_module = config.modules.impermanence;
 
   # Get the lyceum server package from the flake input
-  lyceum_server = 
-    if args ? lyceum 
-    then args.lyceum.packages.${pkgs.system}.server
-    else throw "The 'lyceum' flake input must be passed via specialArgs to use the lyceum module";
+  lyceum_server =
+    if args ? lyceum then
+      args.lyceum.packages.${pkgs.system}.server
+    else
+      throw "The 'lyceum' flake input must be passed via specialArgs to use the lyceum module";
 
   lyceum_work_dir =
     if impermanence_module.enable then
@@ -46,7 +47,15 @@ in
 
   config = mkIf cfg.enable (mkMerge [
     ({
-      environment.systemPackages = [ lyceum_server ];
+      environment.systemPackages = [
+        lyceum_server
+      ]
+      ++ (with pkgs; [
+        coreutils
+        gnugrep
+        gawk
+        openssl
+      ]);
 
       networking = {
         # I don't like it, but we need to fix the game's server
@@ -65,9 +74,9 @@ in
       # Systemd services
       systemd.services.lyceum = {
         description = "Lyceum Game Server";
-        wantedBy = [ "multi-user.target" ];
 
-        # Ensure dependencies are met
+        # Ensure dependencies and outputs are met
+        wantedBy = [ "multi-user.target" ];
         after = [
           "network.target"
           "postgresql.service"
@@ -80,21 +89,22 @@ in
         ];
 
         serviceConfig = {
-          Type = "simple";
+          Type = "forking";
           User = cfg.user;
           Group = "users";
-
-          # Path to the release
           ExecStart = "${lyceum_server}/bin/lyceum foreground";
+          ExecStop = "${lyceum_server}/bin/lyceum stop";
+          ExecRestart = "${lyceum_server}/bin/lyceum restart";
 
           # Restart configuration
-          Restart = "always";
+          Restart = "on-failure";
           RestartSec = "10s";
+          KillMode = "process";
 
           # Security hardening
           NoNewPrivileges = true;
           PrivateTmp = true;
-          ProtectSystem = "strict";
+          # ProtectSystem = "strict";
           ProtectHome = "read-only";
 
           # Allow writing to runtime directory
@@ -104,9 +114,11 @@ in
           # Logs
           StandardOutput = "journal";
           StandardError = "journal";
+          SyslogIdentifier = "lyceum";
 
           # Resource limits
           LimitNOFILE = "65536";
+          LimitNPROC = "4096";
 
           # Working directory
           WorkingDirectory = "${lyceum_work_dir}/Apps";

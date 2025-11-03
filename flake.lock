@@ -437,11 +437,11 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1762171042,
-        "narHash": "sha256-0T6V+ysJbAT1loShPqU2BJfpgU7OQmKHrM0oRACea2c=",
+        "lastModified": 1762205524,
+        "narHash": "sha256-JWinTw7CiLGzrp73Qu4+miJYaz4bQPxMeVSqlpf4t6I=",
         "owner": "Dr-Nekoma",
         "repo": "lyceum",
-        "rev": "70ccf2baaa7b0549dd13aa90228fe5f202ac2ed4",
+        "rev": "fc388284afb63e767fce5372d39ad43be02ed087",
         "type": "github"
       },
       "original": {
@@ -652,11 +652,11 @@
     },
     "nixpkgs_4": {
       "locked": {
-        "lastModified": 1761907660,
-        "narHash": "sha256-kJ8lIZsiPOmbkJypG+B5sReDXSD1KGu2VEPNqhRa/ew=",
+        "lastModified": 1762111121,
+        "narHash": "sha256-4vhDuZ7OZaZmKKrnDpxLZZpGIJvAeMtK6FKLJYUtAdw=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "2fb006b87f04c4d3bdf08cfdbc7fab9c13d94a15",
+        "rev": "b3d51a0365f6695e7dd5cdf3e180604530ed33b4",
         "type": "github"
       },
       "original": {

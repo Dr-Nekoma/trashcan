@@ -1,4 +1,9 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 {
   nixpkgs.overlays = [
@@ -7,7 +12,7 @@
       postgresql_18 = super.postgresql_18 // {
         pkgs = super.postgresql_18.pkgs // {
           omnigres = super.postgresql_18.pkgs.omnigres.overrideAttrs (prev: rec {
-            cmakeFlags = (prev.cmakeFlags or []) ++ [
+            cmakeFlags = (prev.cmakeFlags or [ ]) ++ [
               "-DCMAKE_POLICY_VERSION_MINIMUM=3.10"
             ];
           });
