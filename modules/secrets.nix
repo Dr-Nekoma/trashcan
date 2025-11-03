@@ -54,7 +54,7 @@ in
     (mkIf lyceum_module.enable {
       age = {
         secrets = {
-          lyceum_erlang_cookie = {
+          lyceum_application_env = {
             file = ../secrets/lyceum_application_env.age;
             owner = lyceum_module.user;
             group = "users";
@@ -112,7 +112,7 @@ in
           };
 
           pg_user_lyceum_mnesia = {
-            file = ../secrets/pg_user_lyceum_mnesi.age;
+            file = ../secrets/pg_user_lyceum_mnesia.age;
             owner = config.systemd.services.postgresql.serviceConfig.User;
             group = config.systemd.services.postgresql.serviceConfig.Group;
             mode = "440";
@@ -132,6 +132,9 @@ in
       systemd.services.postgresql.postStart =
         let
           pg_lyceum_user = config.age.secrets.pg_user_lyceum.path;
+          pg_lyceum_application_user = config.age.secrets.pg_user_lyceum_application.path;
+          pg_lyceum_auth_user = config.age.secrets.pg_user_lyceum_auth.path;
+          pg_lyceum_mnesia_user = config.age.secrets.pg_user_lyceum_mnesia.path;
           pg_migration_user = config.age.secrets.pg_user_migrations.path;
         in
         ''
@@ -143,6 +146,9 @@ in
           ${postgresql_module.package}/bin/psql -tA <<'EOF'
             DO $$
             DECLARE lyceum_password TEXT;
+            DECLARE lyceum_application_password TEXT;
+            DECLARE lyceum_auth_password TEXT;
+            DECLARE lyceum_mnesia_password TEXT;
             DECLARE migrations_password TEXT;
             BEGIN
               -- Read and set lyceum password
@@ -160,6 +166,14 @@ in
               -- Grant default privileges for future schemas created by migrations user
               ALTER DEFAULT PRIVILEGES FOR ROLE migrations GRANT ALL ON TABLES TO migrations;
               ALTER DEFAULT PRIVILEGES FOR ROLE migrations GRANT ALL ON SEQUENCES TO migrations;
+
+              -- Application User
+              lyceum_application_password := trim(both from replace(pg_read_file('${pg_lyceum_application_user}'), E'\n', '''));
+              EXECUTE format('ALTER USER application WITH PASSWORD %L;', lyceum_application_password);
+
+              -- MNESIA User
+              lyceum_mnesia_password := trim(both from replace(pg_read_file('${pg_lyceum_mnesia_user}'), E'\n', '''));
+              EXECUTE format('ALTER USER mnesia WITH PASSWORD %L;', lyceum_mnesia_password);
             END $$;
           EOF
         '';
