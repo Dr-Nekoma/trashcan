@@ -49,13 +49,7 @@ in
     ({
       environment.systemPackages = [
         lyceum_server
-      ]
-      ++ (with pkgs; [
-        coreutils
-        gnugrep
-        gawk
-        openssl
-      ]);
+      ];
 
       networking = {
         # I don't like it, but we need to fix the game's server
