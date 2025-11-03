@@ -54,6 +54,7 @@
         disko.nixosModules.disko
         impermanence.nixosModules.impermanence
         ./hosts/bootstrap/configuration.nix
+        (import ./overlays)
       ];
 
       nekomaModules = [
@@ -61,6 +62,7 @@
         disko.nixosModules.disko
         impermanence.nixosModules.impermanence
         ./hosts/nekoma/configuration.nix
+        (import ./overlays)
       ];
     in
     flake-parts.lib.mkFlake { inherit inputs; } {
@@ -222,6 +224,7 @@
               hostId = hostId;
               profile = "ext4";
               target = "aws";
+              inherit lyceum;
             };
           };
 
@@ -232,6 +235,7 @@
               hostId = hostId;
               profile = "ext4";
               target = "aws";
+              inherit lyceum;
             };
           };
 
@@ -245,6 +249,7 @@
               hostId = hostId;
               profile = "ext4";
               target = "mgc";
+              inherit lyceum;
             };
           };
 
@@ -255,6 +260,7 @@
               hostId = hostId;
               profile = "ext4";
               target = "mgc";
+              inherit lyceum;
             };
           };
 
@@ -268,6 +274,7 @@
               hostId = hostId;
               profile = "ext4";
               target = "vm";
+              inherit lyceum;
             };
           };
 
@@ -278,6 +285,7 @@
               hostId = hostId;
               profile = "ext4";
               target = "vm";
+              inherit lyceum;
             };
           };
         };

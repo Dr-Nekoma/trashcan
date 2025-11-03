@@ -108,7 +108,7 @@ in
           maintenance_io_concurrency = 32;
         };
         extensions = with pg.pkgs; [
-          # omnigres
+          omnigres
           periods
           repmgr
         ];

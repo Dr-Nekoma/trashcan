@@ -89,7 +89,6 @@ in
               }
             ];
             files = [
-              ".erlang.cookie"
               ".zsh_history"
             ];
           };

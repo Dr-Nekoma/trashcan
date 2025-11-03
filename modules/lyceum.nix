@@ -2,16 +2,18 @@
   lib,
   config,
   pkgs,
-  lyceum,
   ...
-}:
+}@args:
 
 let
   cfg = config.modules.lyceum;
   impermanence_module = config.modules.impermanence;
 
   # Get the lyceum server package from the flake input
-  lyceum_server = lyceum.packages.${pkgs.system}.server;
+  lyceum_server = 
+    if args ? lyceum 
+    then args.lyceum.packages.${pkgs.system}.server
+    else throw "The 'lyceum' flake input must be passed via specialArgs to use the lyceum module";
 
   lyceum_work_dir =
     if impermanence_module.enable then
@@ -67,16 +69,13 @@ in
 
         # Ensure dependencies are met
         after = [
-          "agenix.service"
           "network.target"
           "postgresql.service"
         ];
         wants = [
-          "agenix.service"
           "postgresql.service"
         ];
         requires = [
-          "agenix.service"
           "postgresql.service"
         ];
 
