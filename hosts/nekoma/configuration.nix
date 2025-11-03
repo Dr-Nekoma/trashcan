@@ -55,7 +55,7 @@ in
   };
 
   modules.lyceum = {
-    enable = false;
+    enable = true;
   };
 
   # This is required by ZFS

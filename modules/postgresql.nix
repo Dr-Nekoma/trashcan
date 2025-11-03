@@ -39,6 +39,15 @@ in
         ];
         ensureUsers = [
           {
+            name = "admin";
+            ensureClauses = {
+              login = true;
+              superuser = true;
+              createrole = true;
+            };
+          }
+
+          {
             name = "lyceum";
             ensureDBOwnership = true;
             ensureClauses = {
@@ -48,11 +57,32 @@ in
           }
 
           {
+            name = "lyceum_auth";
+            ensureClauses = {
+              login = true;
+            };
+          }
+
+          {
+            name = "application";
+            ensureClauses = {
+              login = true;
+            };
+          }
+
+          {
             name = "migrations";
             ensureClauses = {
               login = true;
               superuser = true;
               createrole = true;
+            };
+          }
+
+          {
+            name = "mnesia";
+            ensureClauses = {
+              login = true;
             };
           }
         ];
@@ -78,7 +108,7 @@ in
           maintenance_io_concurrency = 32;
         };
         extensions = with pg.pkgs; [
-          # omnigres
+          omnigres
           periods
           repmgr
         ];
