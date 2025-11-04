@@ -129,58 +129,75 @@ in
 
       # Add passswords after pg starts
       # https://discourse.nixos.org/t/assign-password-to-postgres-user-declaratively/9726/3
-      systemd.services.postgresql.postStart =
-        let
-          pg_lyceum_user = config.age.secrets.pg_user_lyceum.path;
-          pg_lyceum_application_user = config.age.secrets.pg_user_lyceum_application.path;
-          pg_lyceum_auth_user = config.age.secrets.pg_user_lyceum_auth.path;
-          pg_lyceum_mnesia_user = config.age.secrets.pg_user_lyceum_mnesia.path;
-          pg_migration_user = config.age.secrets.pg_user_migrations.path;
-        in
-        ''
-          # Wait for PostgreSQL to be fully ready
-          until ${postgresql_module.package}/bin/pg_isready -q; do
-            sleep 1
-          done
+      systemd.services.postgresql = {
+        # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/nixos/modules/services/databases/postgresql.nix
+        after = [ "network.target" "run-agenix.d.mount" ];
+        postStart =
+          let
+            pg_lyceum_user = config.age.secrets.pg_user_lyceum.path;
+            pg_lyceum_application_user = config.age.secrets.pg_user_lyceum_application.path;
+            pg_lyceum_auth_user = config.age.secrets.pg_user_lyceum_auth.path;
+            pg_lyceum_mnesia_user = config.age.secrets.pg_user_lyceum_mnesia.path;
+            pg_migration_user = config.age.secrets.pg_user_migrations.path;
+          in
+          ''
+            # Wait for PostgreSQL to be fully ready
+            check-connection() {
+              psql -d postgres -v ON_ERROR_STOP=1 <<-'  EOF'
+                SELECT pg_is_in_recovery() \gset
+                \if :pg_is_in_recovery
+                \i still-recovering
+                \endif
+              EOF
+            }
 
-          ${postgresql_module.package}/bin/psql -tA <<'EOF'
-            DO $$
-            DECLARE lyceum_password TEXT;
-            DECLARE lyceum_app_password TEXT;
-            DECLARE lyceum_auth_password TEXT;
-            DECLARE lyceum_mnesia_password TEXT;
-            DECLARE migrations_password TEXT;
-            BEGIN
-              -- Read and set lyceum password
-              lyceum_password := trim(both from replace(pg_read_file('${pg_lyceum_user}'), E'\n', '''));
-              EXECUTE format('ALTER USER lyceum WITH PASSWORD %L;', lyceum_password);
+            while ! check-connection 2> /dev/null; do
+                if ! systemctl is-active --quiet postgresql.service; then exit 1; fi
+                sleep 1
+            done
 
-              -- Read and set migrations password
-              migrations_password := trim(both from replace(pg_read_file('${pg_migration_user}'), E'\n', '''));
-              EXECUTE format('ALTER USER migrations WITH PASSWORD %L;', migrations_password);
+            ${postgresql_module.package}/bin/psql -tA <<'EOF'
+              DO $$
+              DECLARE lyceum_password TEXT;
+              DECLARE lyceum_app_password TEXT;
+              DECLARE lyceum_auth_password TEXT;
+              DECLARE lyceum_mnesia_password TEXT;
+              DECLARE migrations_password TEXT;
+              BEGIN
+                -- Read and set lyceum password
+                lyceum_password := trim(both from replace(pg_read_file('${pg_lyceum_user}'), E'\n', '''));
+                EXECUTE format('ALTER USER lyceum WITH PASSWORD %L;', lyceum_password);
 
-              -- Application User
-              lyceum_app_password := trim(both from replace(pg_read_file('${pg_lyceum_application_user}'), E'\n', '''));
-              EXECUTE format('ALTER USER application WITH PASSWORD %L;', lyceum_app_password);
+                -- Read and set migrations password
+                migrations_password := trim(both from replace(pg_read_file('${pg_migration_user}'), E'\n', '''));
+                EXECUTE format('ALTER USER migrations WITH PASSWORD %L;', migrations_password);
 
-              -- Auth User
-              lyceum_auth_password := trim(both from replace(pg_read_file('${pg_lyceum_auth_user}'), E'\n', '''));
-              EXECUTE format('ALTER USER application WITH PASSWORD %L;', lyceum_auth_password);
+                -- Application User
+                lyceum_app_password := trim(both from replace(pg_read_file('${pg_lyceum_application_user}'), E'\n', '''));
+                EXECUTE format('ALTER USER application WITH PASSWORD %L;', lyceum_app_password);
 
-              -- MNESIA User
-              lyceum_mnesia_password := trim(both from replace(pg_read_file('${pg_lyceum_mnesia_user}'), E'\n', '''));
-              EXECUTE format('ALTER USER mnesia WITH PASSWORD %L;', lyceum_mnesia_password);
+                -- Auth User
+                lyceum_auth_password := trim(both from replace(pg_read_file('${pg_lyceum_auth_user}'), E'\n', '''));
+                EXECUTE format('ALTER USER lyceum_auth WITH PASSWORD %L;', lyceum_auth_password);
 
-              -- Grant permissions to users
-              GRANT CONNECT ON DATABASE lyceum TO migrations;
-              GRANT CREATE ON DATABASE lyceum TO migrations;
+                -- MNESIA User
+                lyceum_mnesia_password := trim(both from replace(pg_read_file('${pg_lyceum_mnesia_user}'), E'\n', '''));
+                EXECUTE format('ALTER USER mnesia WITH PASSWORD %L;', lyceum_mnesia_password);
 
-              GRANT CONNECT ON DATABASE lyceum TO application;
-              GRANT CONNECT ON DATABASE lyceum TO lyceum_auth;
-              GRANT CONNECT ON DATABASE lyceum TO mnesia;
-            END $$;
-          EOF
-        '';
+                -- Grant permissions to users
+                GRANT CONNECT ON DATABASE lyceum TO migrations;
+                GRANT CREATE ON DATABASE lyceum TO migrations;
+                -- Grant default privileges for future schemas created by migrations user
+                ALTER DEFAULT PRIVILEGES FOR ROLE migrations GRANT ALL ON TABLES TO migrations;
+                ALTER DEFAULT PRIVILEGES FOR ROLE migrations GRANT ALL ON SEQUENCES TO migrations;
+
+                GRANT CONNECT ON DATABASE lyceum TO application;
+                GRANT CONNECT ON DATABASE lyceum TO lyceum_auth;
+                GRANT CONNECT ON DATABASE lyceum TO mnesia;
+              END $$;
+            EOF
+          '';
+      };
 
       services.pgbouncer.settings = {
         pgbouncer = {

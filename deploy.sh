@@ -48,7 +48,7 @@ printf "\n\tDEPLOYING FLAKE=%s to TARGET=%s\n\n" "$TARGET_FLAKE" "$TARGET_HOST"
 
 nix run nixpkgs#nixos-rebuild switch -- \
     -j auto \
-    --use-remote-sudo \
+    --sudo \
     --flake ".#$TARGET_FLAKE" \
     --build-host localhost \
     --target-host "$TARGET_HOST"
