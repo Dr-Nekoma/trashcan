@@ -74,12 +74,24 @@ in
         after = [
           "network.target"
           "postgresql.service"
+          "run-agenix.d.mount"
         ];
         wants = [
           "postgresql.service"
+          "run-agenix.d.mount"
         ];
         requires = [
           "postgresql.service"
+          "run-agenix.d.mount"
+        ];
+
+        # To make sure the packages in the service's $PATH
+        path = with pkgs; [
+          coreutils
+          gnugrep
+          gawk
+          liburing
+          openssl
         ];
 
         serviceConfig = {

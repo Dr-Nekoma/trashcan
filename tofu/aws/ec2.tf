@@ -30,11 +30,6 @@ resource "aws_instance" "vm" {
   subnet_id                   = aws_subnet.public.id
   vpc_security_group_ids      = [aws_security_group.vm.id]
 
-  user_data = <<-EOF
-    #!/bin/sh
-    (umask 377; echo '${tls_private_key.nixos-in-production.private_key_openssh}' > /var/lib/agenix/id_ed25519)
-  EOF
-
   root_block_device {
     volume_size = var.instance_root_volume_size_in_gb
     volume_type = "gp3"
