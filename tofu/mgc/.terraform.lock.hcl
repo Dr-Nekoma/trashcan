@@ -20,7 +20,7 @@ provider "registry.opentofu.org/hashicorp/external" {
 
 provider "registry.opentofu.org/hashicorp/local" {
   version     = "2.5.3"
-  constraints = "~> 2.4"
+  constraints = "~> 2.5.3"
   hashes = [
     "h1:mC9+u1eaUILTjxey6Ivyf/3djm//RNNze9kBVX/trng=",
     "zh:32e1d4b0595cea6cda4ca256195c162772ddff25594ab4008731a2ec7be230bf",
@@ -38,7 +38,7 @@ provider "registry.opentofu.org/hashicorp/local" {
 
 provider "registry.opentofu.org/hashicorp/null" {
   version     = "3.2.4"
-  constraints = "~> 3.2"
+  constraints = "~> 3.2.4"
   hashes = [
     "h1:jsKjBiLb+v3OIC3xuDiY4sR0r1OHUMSWPYKult9MhT0=",
     "zh:1769783386610bed8bb1e861a119fe25058be41895e3996d9216dd6bb8a7aee3",
@@ -56,7 +56,7 @@ provider "registry.opentofu.org/hashicorp/null" {
 
 provider "registry.opentofu.org/hashicorp/tls" {
   version     = "4.1.0"
-  constraints = "~> 4.0"
+  constraints = "~> 4.1.0"
   hashes = [
     "h1:MByilNnYPdjPTlb/qcNgR0DErA6550hI6wd8OJYB1vw=",
     "zh:187a99f0d236fd92da224e2f026c4ca8f1dcbf2b5cddc8e6896801bacfab0d73",
@@ -74,7 +74,7 @@ provider "registry.opentofu.org/hashicorp/tls" {
 
 provider "registry.opentofu.org/magalucloud/mgc" {
   version     = "0.39.0"
-  constraints = "~> 0.27"
+  constraints = "~> 0.39.0"
   hashes = [
     "h1:3K4oW0ZuENRz6gU2sBHXhOaK1hPh9v7rQtewN/eAEj8=",
     "zh:03033fcd618042630a2f1cbe40f67baba814b2b5b893e89afd527bec1b143d6e",

@@ -124,23 +124,15 @@
               type = "app";
 
               program = "${pkgs.writeShellScript "run-vm.sh" ''
-                if [ -z "$1" ]; then
-                  echo "Usage: $0 <path-to-boot-image>"
-                  exit 1
-                fi
+                set -e
+                echo "Building VM with Disko..."
+                ${pkgs.nix}/bin/nix build ".#nixosConfigurations.bootstrap_vm.config.system.build.vmWithDisko" "$@"
 
-                export NIX_DISK_IMAGE=$(mktemp -u -t nixos.XXXXXX.qcow2)
+                export QEMU_KERNEL_PARAMS="console=ttyS0"
+                export QEMU_NET_OPTS="hostfwd=tcp:127.0.0.1:2222-:22,hostfwd=tcp:127.0.0.1:4369-:4369,hostfwd=udp:127.0.0.1:4369-:4369"
 
-                trap "rm -f $NIX_DISK_IMAGE" EXIT
-                cp "$1" "$NIX_DISK_IMAGE"
-                ${pkgs.qemu}/bin/qemu-system-x86_64 \
-                  -enable-kvm \
-                  -m 2G \
-                  -cpu max \
-                  -smp 2 \
-                  -netdev user,id=net0,hostfwd=tcp::2222-:22 \
-                  -device virtio-net-pci,netdev=net0 \
-                  -drive "if=virtio,format=raw,file=$NIX_DISK_IMAGE"
+                echo "Running VM..."
+                ${pkgs.nix}/bin/nix run -L ".#nixosConfigurations.bootstrap_vm.config.system.build.vmWithDisko"
               ''}";
             };
           };
@@ -200,7 +192,7 @@
                       export QEMU_KERNEL_PARAMS="console=ttyS0"
                       # Options to foward 
                       #   host 2222 -> vm 22
-                      export QEMU_NET_OPTS="hostfwd=tcp:127.0.0.1:2222-:22"
+                      export QEMU_NET_OPTS="hostfwd=tcp:127.0.0.1:2222-:22,hostfwd=tcp:127.0.0.1:4369-:4369,hostfwd=udp:127.0.0.1:4369-:4369"
                     '';
                   }
                 )

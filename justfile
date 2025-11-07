@@ -76,8 +76,8 @@ plan tf_target +VARS="":
 
 # Provision infra changes
 [group('tofu')]
-apply tf_target:
-    cd "{{ tofu_dir }}/{{ tf_target }}" && tofu apply "tfplan"
+apply tf_target +VARS="":
+    cd "{{ tofu_dir }}/{{ tf_target }}" && tofu apply "tfplan" {{ VARS }}
 
 # Destroy infra
 [group('tofu')]

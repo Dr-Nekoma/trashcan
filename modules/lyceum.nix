@@ -74,6 +74,7 @@ in
         after = [
           "network.target"
           "postgresql.service"
+          "postgresql-setup.service"
           "run-agenix.d.mount"
         ];
         wants = [
@@ -84,6 +85,12 @@ in
           "postgresql.service"
           "run-agenix.d.mount"
         ];
+        # Still unsure wether to go with PartsOf or BindsTo
+        # https://stackoverflow.com/a/47216959/4614840
+        # https://unix.stackexchange.com/a/327006/117072
+        # partOf = [
+        #   "postgresql.service"
+        # ];
 
         # To make sure the packages in the service's $PATH
         path = with pkgs; [
