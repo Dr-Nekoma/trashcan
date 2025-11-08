@@ -7,6 +7,7 @@
 
 let
   cfg = config.modules.lyceum;
+  postgresql_module = config.modules.postgresql;
   impermanence_module = config.modules.impermanence;
 
   # Get the lyceum server package from the flake input
@@ -58,7 +59,7 @@ in
         firewall = {
           allowedTCPPorts = [
             cfg.epmd_port
-          ];
+          ] ++ (pkgs.lib.range 9100 9155);
           allowedUDPPorts = [
             cfg.epmd_port
           ];
@@ -74,7 +75,6 @@ in
         after = [
           "network.target"
           "postgresql.service"
-          "postgresql-setup.service"
           "run-agenix.d.mount"
         ];
         wants = [
@@ -105,6 +105,12 @@ in
           Type = "forking";
           User = cfg.user;
           Group = "users";
+          ExecStartPre = pkgs.writeShellScript "check-pg.sh" ''
+            # Wait for PostgreSQL to be fully ready
+            until ${postgresql_module.package}/bin/pg_isready -q; do
+              sleep 1
+            done
+          '';
           ExecStart = "${lyceum_server}/bin/lyceum foreground";
           ExecStop = "${lyceum_server}/bin/lyceum stop";
           ExecRestart = "${lyceum_server}/bin/lyceum restart";

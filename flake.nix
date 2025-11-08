@@ -75,6 +75,14 @@
       perSystem =
         { pkgs, system, ... }:
         let
+          # Port Fowarding (HOST -> VM)
+          # - SSH: 2222 -> 22 
+          # - EMPD: 4369
+          # - Erlang Distribution Ports: 9100-9155
+          #   Make sure to configure it with erl -kernel inet_dist_listen_min 9100 inet_dist_listen_max 9155
+          qemu_options = {
+            net = "hostfwd=tcp:127.0.0.1:2222-:22,hostfwd=tcp:127.0.0.1:4369-:4369,hostfwd=tcp:127.0.0.1:9100-:9100,hostfwd=tcp:127.0.0.1:9101-:9101,hostfwd=tcp:127.0.0.1:9102-:9102,hostfwd=tcp:127.0.0.1:9103-:9103,hostfwd=tcp:127.0.0.1:9104-:9104,hostfwd=tcp:127.0.0.1:9105-:9105";
+          };
           treefmtEval = treefmt-nix.lib.evalModule pkgs ./treefmt.nix;
         in
         {
@@ -129,7 +137,7 @@
                 ${pkgs.nix}/bin/nix build ".#nixosConfigurations.bootstrap_vm.config.system.build.vmWithDisko" "$@"
 
                 export QEMU_KERNEL_PARAMS="console=ttyS0"
-                export QEMU_NET_OPTS="hostfwd=tcp:127.0.0.1:2222-:22,hostfwd=tcp:127.0.0.1:4369-:4369,hostfwd=udp:127.0.0.1:4369-:4369"
+                export QEMU_NET_OPTS=${qemu_options.net}
 
                 echo "Running VM..."
                 ${pkgs.nix}/bin/nix run -L ".#nixosConfigurations.bootstrap_vm.config.system.build.vmWithDisko"

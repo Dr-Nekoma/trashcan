@@ -144,20 +144,9 @@ in
             pg_migration_user = config.age.secrets.pg_user_migrations.path;
           in
           ''
-            check-connection() {
-              psql -d postgres -v ON_ERROR_STOP=1 <<-'  EOF'
-                SELECT pg_is_in_recovery() \gset
-                \if :pg_is_in_recovery
-                \i still-recovering
-                \endif
-              EOF
-            }
-
-            sleep 1
             # Wait for PostgreSQL to be fully ready
-            while ! check-connection 2> /dev/null; do
-                if ! systemctl is-active --quiet postgresql.service; then exit 1; fi
-                sleep 0.5
+            until ${postgresql_module.package}/bin/pg_isready -q; do
+              sleep 1
             done
 
             ${postgresql_module.package}/bin/psql -tA <<'EOF'
