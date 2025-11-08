@@ -61,13 +61,13 @@ in
             mode = "440";
           };
 
-          lyceum_erlang_cookie = {
-            file = ../secrets/lyceum_erlang_cookie.age;
-            owner = lyceum_module.user;
-            group = "users";
-            mode = "440";
-            path = "${lyceum_work_dir}/.erlang.cookie";
-          };
+          # lyceum_erlang_cookie = {
+          #   file = ../secrets/lyceum_erlang_cookie.age;
+          #   owner = lyceum_module.user;
+          #   group = "users";
+          #   mode = "440";
+          #   path = "${lyceum_work_dir}/.erlang.cookie";
+          # };
         };
       };
 
@@ -131,7 +131,10 @@ in
       # https://discourse.nixos.org/t/assign-password-to-postgres-user-declaratively/9726/3
       systemd.services.postgresql = {
         # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/nixos/modules/services/databases/postgresql.nix
-        after = [ "network.target" "run-agenix.d.mount" ];
+        after = [
+          "network.target"
+          "run-agenix.d.mount"
+        ];
         postStart =
           let
             pg_lyceum_user = config.age.secrets.pg_user_lyceum.path;
@@ -142,18 +145,8 @@ in
           in
           ''
             # Wait for PostgreSQL to be fully ready
-            check-connection() {
-              psql -d postgres -v ON_ERROR_STOP=1 <<-'  EOF'
-                SELECT pg_is_in_recovery() \gset
-                \if :pg_is_in_recovery
-                \i still-recovering
-                \endif
-              EOF
-            }
-
-            while ! check-connection 2> /dev/null; do
-                if ! systemctl is-active --quiet postgresql.service; then exit 1; fi
-                sleep 1
+            until ${postgresql_module.package}/bin/pg_isready -q; do
+              sleep 1
             done
 
             ${postgresql_module.package}/bin/psql -tA <<'EOF'

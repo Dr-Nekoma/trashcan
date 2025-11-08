@@ -141,8 +141,15 @@ in
 
       # Make pgbouncer wait for postgresql to be fully configured
       systemd.services.pgbouncer = {
-        after = [ "postgresql.service" ];
-        requires = [ "postgresql.service" ];
+        after = [
+          "postgresql.service"
+          "postgresql-setup.service"
+          "run-agenix.d.mount"
+        ];
+        requires = [
+          "postgresql.service"
+          "run-agenix.d.mount"
+        ];
         # Add a small delay to ensure pg's postStart has completed
         serviceConfig = {
           ExecStartPre = "${pkgs.coreutils}/bin/sleep 4";

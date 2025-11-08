@@ -1,10 +1,10 @@
 # ===============
 # MGC Variables
 # ===============
-variable "mgc_api_key" {
-  description = "API key to use with the provider."
-  sensitive   = true
+variable "api_key" {
   type        = string
+  sensitive   = true
+  description = "The Magalu Cloud API Key"
 }
 
 variable "mgc_region" {
@@ -18,8 +18,8 @@ variable "mgc_region" {
 variable "instance_type" {
   description = "Instance type for the VM"
   type        = string
-  # Options: cloud-bs1.xsmall, cloud-bs1.small, cloud-bs1.medium, etc.
-  default = "cloud-bs1.xsmall"
+  # Options: BV1-2-10, BV1-2-150, BV2-4-40, etc.
+  default = "BV2-4-40"
 }
 
 variable "initial_image" {
