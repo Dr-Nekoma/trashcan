@@ -10,8 +10,8 @@ here:
 + [[https://github.com/Dr-Nekoma/lyceum][Lyceum]]
 
 This setup is also an ongoing experiment that mixes multiple infrastructure and
-deployment tools, including [[https://nixos.org/][Nix/NixOS]], [[https://devenv.sh/][devenv]] (for local development
-environments), [[https://opentofu.org/][OpenTofu]], and [[https://github.com/terrateamio/terrateam][Terrateam]].
+deployment tools, including [[https://nixos.org/][Nix/NixOS]] (with [[https://github.com/nix-community/disko][disko]] and [[https://github.com/nix-community/impermanence][impermanence]]), [[https://devenv.sh/][devenv]] (for
+local development environments), [[https://opentofu.org/][OpenTofu]], and [[https://github.com/terrateamio/terrateam][Terrateam]].
 
 ** Development
 
@@ -38,7 +38,7 @@ Then, return to this project's root directory and:
 
 1. Modify [[./keys/default.nix]] to add your user and public key following the existing format.
 2. If you want to add a new secret, edit [[./secrets/secrets.nix]] and include it there.  
-   Use `~everyone~` as the list of public keys.
+   Use ~everyone~ as the list of public keys.
 
    #+begin_src shell
      # If your SSH agent already has a key loaded
