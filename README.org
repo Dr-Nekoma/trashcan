@@ -4,9 +4,8 @@
 #+html: <a href="https://github.com/Dr-Nekoma/trashcan/actions/workflows/qemu_build.yml"><img alt="[QEMU] Build" src="https://github.com/Dr-Nekoma/trashcan/actions/workflows/qemu_build.yml/badge.svg" /></a>
 
 This repository contains the server configuration to host applications from
-[[https://github.com/Dr-Nekoma][Dr. Nekoma]] and [[https://github.com/dont-rely-on-nulls][Don't Rely on Nulls]].  
-
-Currently, the following projects are hosted here:
+[[https://github.com/Dr-Nekoma][Dr. Nekoma]] and [[https://github.com/dont-rely-on-nulls][Don't Rely on Nulls]]. Currently, the following projects are hosted
+here:
 
 + [[https://github.com/Dr-Nekoma/lyceum][Lyceum]]
 
@@ -118,7 +117,7 @@ To build a bootable ISO image (for testing or deployment bootstraps):
 Trashcan uses a **two-stage deployment** process that combines *OpenTofu* and
 *NixOS* for reproducible configuration management.
 
-1. **Stage 1 – Bootstrap Infrastructure**  
+1. *Bootstrap Infrastructure*
 
    This stage provisions the minimal infrastructure required to get the system
    running, including:
@@ -134,7 +133,7 @@ Trashcan uses a **two-stage deployment** process that combines *OpenTofu* and
 
      and is deployed using the Terraform modules from [[https://github.com/nix-community/nixos-anywhere/tree/main/terraform][nixos-anywhere]].
 
-2. **Stage 2 – Declarative Configuration (NixOS)**
+2. *Declarative Configuration (NixOS)*
 
    Once the base system is up, NixOS takes over. This configuration then evolves
    into a final one, which adds services like:
