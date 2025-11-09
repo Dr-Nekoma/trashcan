@@ -114,7 +114,7 @@ To build a bootable ISO image (for testing or deployment bootstraps):
 
 ** Deployment
 
-Trashcan uses a **two-stage deployment** process that combines *OpenTofu* and
+Trashcan uses a two-stage deployment process that combines *OpenTofu* and
 *NixOS* for reproducible configuration management.
 
 1. *Bootstrap Infrastructure*
@@ -125,7 +125,7 @@ Trashcan uses a **two-stage deployment** process that combines *OpenTofu* and
    - Networking setup (VPCs, subnets).
    - A static IP.
    - Base compute instances.
-   - A **minimal NixOS configuration** that includes:
+   - A *minimal NixOS configuration* that includes:
 
      + SSH
      + A couple base users
@@ -146,8 +146,8 @@ Trashcan uses a **two-stage deployment** process that combines *OpenTofu* and
 
 We target two cloud providers as of now:
 
-- **AWS**
-- **Magalu Cloud**
+- *AWS*
+- *Magalu Cloud*
 
 Make sure that each environment has their proper access tokens configured.
 
