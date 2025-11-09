@@ -90,20 +90,21 @@ destroy tf_target:
 
 # Deploy a NixOS VM (On AWS)
 [group('deploy')]
-deploy_aws:
+deploy-aws:
     @./deploy.sh \
         --target-flake "nekoma_aws" \
         --target-platform "aws"
 
 # Deploy a NixOS VM (On Magalu Cloud)
 [group('deploy')]
-deploy_mgc:
+deploy-mgc:
     @./deploy.sh \
         --target-flake "nekoma_mgc" \
         --target-platform "mgc"
 
+# Deploy a NixOS VM (locally on QEMU)
 [group('deploy')]
-deploy_qemu:
+deploy-qemu:
     @./deploy.sh \
         --target-flake "nekoma_vm" \
         --target-platform "vm"

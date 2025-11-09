@@ -1,90 +1,86 @@
-* Trashcan 🗑️
+* Trashcan
 
 #+html: <a href="https://builtwithnix.org"><img alt="built with nix" src="https://builtwithnix.org/badge.svg" /></a><br>
 #+html: <a href="https://github.com/Dr-Nekoma/trashcan/actions/workflows/qemu_build.yml"><img alt="[QEMU] Build" src="https://github.com/Dr-Nekoma/trashcan/actions/workflows/qemu_build.yml/badge.svg" /></a>
 
 This repository contains the server configuration to host applications from
-[[https://github.com/Dr-Nekoma][Dr. Nekoma]] and [[https://github.com/dont-rely-on-nulls][Don't Rely on Nulls]]. We currently host the following projects in it:
+[[https://github.com/Dr-Nekoma][Dr. Nekoma]] and [[https://github.com/dont-rely-on-nulls][Don't Rely on Nulls]]. Currently, the following projects are hosted
+here:
 
 + [[https://github.com/Dr-Nekoma/lyceum][Lyceum]]
 
-This is also an ongoing experiment mixing different tools, like [[https://nixos.org/][Nix/NixOS]] (and
-[[https://devenv.sh/][devenv]]), [[https://opentofu.org/][OpenTofu]] and [[https://github.com/terrateamio/terrateam][Terrateam]], to name a few.
+This setup is also an ongoing experiment that mixes multiple infrastructure and
+deployment tools, including [[https://nixos.org/][Nix/NixOS]] (with [[https://github.com/nix-community/disko][disko]] and [[https://github.com/nix-community/impermanence][impermanence]]), [[https://devenv.sh/][devenv]] (for
+local development environments), [[https://opentofu.org/][OpenTofu]], and [[https://github.com/terrateamio/terrateam][Terrateam]].
 
-** Developmennt
+** Development
 
-Enter the Nix shell via the cli, or leverage direnv:
+Enter the Nix shell via the CLI, or leverage *direnv* for automatic environment loading:
 
 #+begin_src shell
-  # Nix CLI
+  # Using the Nix CLI
   nix develop --impure
-  # direnv
+
+  # Or, if using direnv
   direnv allow
 #+end_src
 
 *** Setting Up Local Keys
 
-If you dont have any keys setup already:
+If you don’t have SSH keys configured yet:
 
 #+begin_src shell
   cd $HOME/.ssh
   ssh-keygen -t ed25519 -C "your.email@gmail.com"
 #+end_src
 
-Then go back to this project and proceed to:
+Then, return to this project's root directory and:
 
-1. Modify the [[./keys/default.nix]] file, add your user and public key there,
-   follow the same standard provided by the file.
-2. If you also want to add a new secret, modify the [[./secrets/secrets.nix]]. Make
-   sure to use "~everyone~" as the public keys.
+1. Modify [[./keys/default.nix]] to add your user and public key following the existing format.
+2. If you want to add a new secret, edit [[./secrets/secrets.nix]] and include it there.  
+   Use ~everyone~ as the list of public keys.
 
-  #+begin_src shell
-    # Either you already have a key in your SSH agent
-    agenix -e "my_secret.age"
-    # Or if you don't have keys managed by an agent...
-    agenix -e "my_secret.age" -i ~/.ssh/your_private_key
-  #+end_src
+   #+begin_src shell
+     # If your SSH agent already has a key loaded
+     agenix -e "my_secret.age"
 
-3. Then, rekey everything.
+     # Or, explicitly specify your private key
+     agenix -e "my_secret.age" -i ~/.ssh/your_private_key
+   #+end_src
 
-#+begin_src shell
-  # Either this...
-  agenix --rekey
-  # Or...
-  agenix --rekey -i $HOME/.ssh/your_private_key
-#+end_src
+3. Finally, rekey all secrets:
 
-*** Qemu VM
+   #+begin_src shell
+     # With the agent
+     agenix --rekey
 
-To build a local VM, first proceed to run any of these commands:
+     # Or manually
+     agenix --rekey -i $HOME/.ssh/your_private_key
+   #+end_src
 
-#+begin_src shell
-  just build-qemu
-  # or via an alias
-  just bq
-  # or if you're REALLY LAZY
-  bq
-#+end_src
+*** QEMU VM
 
-Followed by:
+To build and run a local virtual machine for testing:
 
 #+begin_src shell
-  just run-qemu
-  # or via an alias
-  just rq
-  # or the lazy version...
-  rq
+  just build-qemu   # or: just bq, or simply: bq
 #+end_src
 
-When inside the VM, check if a few services are running fine:
+Then:
+
+#+begin_src shell
+  just run-qemu     # or: just rq, or simply: rq
+#+end_src
+
+Inside the VM, verify services are running correctly:
 
 #+begin_src shell
   systemctl status sshd.service
-  # or if you're building a configuration with PostgreSQL available
+  # or, if the configuration includes PostgreSQL
   sudo --user postgres psql
 #+end_src
 
-Add the following to your ~$HOME/.ssh/config~:
+You can also add a convenient SSH config entry (on ~$HOME/.ssh/config~):
 
 #+begin_src shell
   Host nekoma_vm
@@ -93,17 +89,24 @@ Add the following to your ~$HOME/.ssh/config~:
     StrictHostKeyChecking no
     User your_user
     IdentityFile your_key
+
+  # Also useful when targeting the cloud providers
+  Host nekoma_vm
+    HostName <whatever-you-get-from-tofu>
+    Port 22
+    User your_user
+    IdentityFile your_key
 #+end_src
 
-then try to login:
+Then connect with:
 
 #+begin_src shell
   ssh nekoma_vm
 #+end_src
 
-*** Custom ISO 
+*** Custom ISO
 
-You can also build an ~.iso~ to test with different tools.
+To build a bootable ISO image (for testing or deployment bootstraps):
 
 #+begin_src shell
   nix build .#iso
@@ -111,47 +114,82 @@ You can also build an ~.iso~ to test with different tools.
 
 ** Deployment
 
-*** Provisioning with Terraform
+Trashcan uses a two-stage deployment process that combines *OpenTofu* and
+*NixOS* for reproducible configuration management.
+
+1. *Bootstrap Infrastructure*
+
+   This stage provisions the minimal infrastructure required to get the system
+   running, including:
+
+   - Networking setup (VPCs, subnets).
+   - A static IP.
+   - Base compute instances.
+   - A *minimal NixOS configuration* that includes:
+
+     + SSH
+     + A couple base users
+     + Common packages and tools
+
+     and is deployed using the Terraform modules from [[https://github.com/nix-community/nixos-anywhere/tree/main/terraform][nixos-anywhere]].
+
+2. *Declarative Configuration (NixOS)*
+
+   Once the base system is up, NixOS takes over. This configuration then evolves
+   into a final one, which adds services like:
+
+   - PostgreSQL and PgBouncer
+   - Secrets management (via [[https://github.com/ryantm/agenix][agenix]])
+   - Application deployments (e.g., Lyceum's game server)
+
+*** Provisioning with OpenTofu
+
+We target two cloud providers as of now:
+
+- *AWS*
+- *Magalu Cloud*
+
+Make sure that each environment has their proper access tokens configured.
 
 **** AWS
 
 #+begin_src shell
-  just plan "aws"
-  # or 'pa'
-  # followed by
-  just apply "aws"
-  # or 'aa'
-  # if you need to nuke the infra as well
-  just destroy "aws"
-  # or 'da' 
+  just plan "aws"     # or 'pa'
+  just apply "aws"    # or 'aa'
+
+  # To destroy all infrastructure
+  just destroy "aws"  # or 'da'
 #+end_src
 
-**** Magalu Cloudu
+**** Magalu Cloud
 
 #+begin_src shell
-  just plan "mgc"
-  # or 'pm'
-  # followed by
-  just apply "mgc"
-  # or 'am'
-  # if you need to nuke the infra as well
-  just destroy "mgc"
-  # or 'dm' 
+  just plan "mgc"     # or 'pm'
+  just apply "mgc"    # or 'am'
+
+  # To destroy all infrastructure
+  just destroy "mgc"  # or 'dm'
 #+end_src
 
 *** Deploying with Nix
 
-After provisioning the initial infrastructure, you usually won't need to care
-about Terraform anymore, all deploys can be done in pure Nix.
+Once infrastructure is provisioned, further management and updates are fully
+handled through Nix.
 
 #+begin_src shell
-  just deploy
-  # or
-  deploy
+  just deploy-aws
+  # or 
+  just deploy-mgc
+  # or if you want to test deploys locally as well
+  just deploy-qemu
 #+end_src
+
+This rebuilds and deploys the NixOS configuration to the target host(s),
+replacing manual provisioning or ad-hoc scripts.
 
 * Acknowledgements
 
-+ The initial Terraform-based (now Open Tofu) bootstrap is a modification from the great setup found in the
-  [[https://github.com/Gabriella439/nixos-in-production][NixOS in Production]] book, but was later heavily modified.
-+ The Magalu Cloud setup was inspired by [[https://github.com/Misterio77/hackathon-mgc-factorio-terraform][the Declarative Factorio]] repo.
++ The initial Terraform-based (now OpenTofu) bootstrap is adapted from the excellent
+  [[https://github.com/Gabriella439/nixos-in-production][NixOS in Production]] book, later heavily customized.
++ The Magalu Cloud setup was inspired by
+  [[https://github.com/Misterio77/hackathon-mgc-factorio-terraform][the Declarative Factorio]] project.
