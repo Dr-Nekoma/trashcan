@@ -51,4 +51,5 @@ nix run nixpkgs#nixos-rebuild switch -- \
     --sudo \
     --flake ".#$TARGET_FLAKE" \
     --build-host localhost \
-    --target-host "$TARGET_HOST"
+    --target-host "$TARGET_HOST" \
+    --show-trace

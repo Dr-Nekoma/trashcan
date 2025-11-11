@@ -95,10 +95,17 @@ in
           compute_query_id = "on";
           "pg_stat_statements.max" = 10000;
           "pg_stat_statements.track" = "all";
+          # All these settings bellow come from here
+          # https://pgtune.leopard.in.ua/
+          shared_buffers = "1GB";
+          effective_cache_size = "3GB";
+          maintenance_work_mem = "256MB";
+          min_wal_size = "2GB";
+          max_wal_size = "8GB";
+          wal_buffers = "16MB";
+          random_page_cost = "1.1";
           # Async/IO Setup
           io_method = "io_uring";
-          # Adjust shared buffers
-          shared_buffers = "1GB";
           # Increase work memory for large operations
           work_mem = "16MB";
           # Enable huge pages if available
@@ -142,17 +149,18 @@ in
       # Make pgbouncer wait for postgresql to be fully configured
       systemd.services.pgbouncer = {
         after = [
+          "postgresql-lyceum-setup.service"
           "postgresql.service"
           "postgresql-setup.service"
-          "run-agenix.d.mount"
         ];
         requires = [
+          "postgresql-lyceum-setup.service"
           "postgresql.service"
-          "run-agenix.d.mount"
+          "postgresql-setup.service"
         ];
         # Add a small delay to ensure pg's postStart has completed
         serviceConfig = {
-          ExecStartPre = "${pkgs.coreutils}/bin/sleep 4";
+          ExecStartPre = "${pkgs.coreutils}/bin/sleep 2";
         };
       };
 

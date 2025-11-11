@@ -44,6 +44,12 @@ in
       default = 4369;
       description = "Erlang Port Mapper Daemon port";
     };
+
+    port_range = mkOption {
+      type = lib.types.listOf lib.types.port;
+      default = pkgs.lib.range 9100 9155;
+      description = "Default port interval that Erlang apps need as well";
+    };
   };
 
   config = mkIf cfg.enable (mkMerge [
@@ -59,7 +65,8 @@ in
         firewall = {
           allowedTCPPorts = [
             cfg.epmd_port
-          ] ++ (pkgs.lib.range 9100 9155);
+          ]
+          ++ cfg.port_range;
           allowedUDPPorts = [
             cfg.epmd_port
           ];
@@ -74,14 +81,12 @@ in
         wantedBy = [ "multi-user.target" ];
         after = [
           "network.target"
-          "postgresql.service"
-          "run-agenix.d.mount"
-        ];
-        wants = [
+          "postgresql-lyceum-setup.service"
           "postgresql.service"
           "run-agenix.d.mount"
         ];
         requires = [
+          "postgresql-lyceum-setup.service"
           "postgresql.service"
           "run-agenix.d.mount"
         ];
@@ -102,29 +107,54 @@ in
         ];
 
         serviceConfig = {
-          Type = "forking";
+          Type = "exec";
           User = cfg.user;
           Group = "users";
-          ExecStartPre = pkgs.writeShellScript "check-pg.sh" ''
+          ExecStartPre = pkgs.writeShellScript "init.sh" ''
             # Wait for PostgreSQL to be fully ready
             until ${postgresql_module.package}/bin/pg_isready -q; do
               sleep 1
             done
           '';
           ExecStart = "${lyceum_server}/bin/lyceum foreground";
-          ExecStop = "${lyceum_server}/bin/lyceum stop";
-          ExecRestart = "${lyceum_server}/bin/lyceum restart";
+          Environment = [
+            "ERL_DIST_PORT_RANGE_MIN=9100"
+            "ERL_DIST_PORT_RANGE_MAX=9155"
+            "ERL_EPMD_PORT=${toString cfg.epmd_port}"
+            # Enable verbose Erlang distribution logging
+            "ERL_FLAGS=-kernel inet_dist_listen_min 9100 inet_dist_listen_max 9155"
+          ];
+
+          # For foreground mode, systemd handles stopping via signals
+          KillSignal = "SIGTERM";
+          TimeoutStopSec = "30s";
+          # Sometimes we run in some shitty cloud vms, so setting a
+          # bigger timeout.
+          TimeoutStartSec = "5min";
 
           # Restart configuration
           Restart = "on-failure";
           RestartSec = "10s";
           KillMode = "process";
 
+          # Networking
+          # Add these to ensure network access
+          IPAddressDeny = "";
+          IPAddressAllow = "any";
+          PrivateNetwork = false;
+          # RestrictAddressFamilies = [ "AF_INET" "AF_INET6" "AF_UNIX" "AF_NETLINK" ];
+
           # Security hardening
-          NoNewPrivileges = true;
-          PrivateTmp = true;
+          # NoNewPrivileges = true;
+
+          # Filesystem hardening
           # ProtectSystem = "strict";
-          ProtectHome = "read-only";
+          # ProtectHome = "tmpfs";
+          # PrivateTmp = true;
+          # PrivateDevices = true;
+          # ProtectKernelTunables = true;
+          # ProtectKernelModules = true;
+          # ProtectControlGroups = true;
 
           # Allow writing to runtime directory
           RuntimeDirectory = "lyceum";
@@ -136,6 +166,13 @@ in
           SyslogIdentifier = "lyceum";
 
           # Resource limits
+          # https://www.man7.org/linux/man-pages/man5/systemd.resource-control.5.html
+          # Memory usage upper & lower bounds
+          MemoryMax = "70%";
+          MemoryHigh = "60%";
+          MemoryLow = "25%";
+          MemorySwapMax = "20%";
+
           LimitNOFILE = "65536";
           LimitNPROC = "4096";
 

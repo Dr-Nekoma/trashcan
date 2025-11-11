@@ -437,11 +437,11 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1762205524,
-        "narHash": "sha256-JWinTw7CiLGzrp73Qu4+miJYaz4bQPxMeVSqlpf4t6I=",
+        "lastModified": 1762911390,
+        "narHash": "sha256-r8WSBzKj/97QtkWgMmEgxzK76TB5j2oLhZXRs+/vKDA=",
         "owner": "Dr-Nekoma",
         "repo": "lyceum",
-        "rev": "fc388284afb63e767fce5372d39ad43be02ed087",
+        "rev": "67311237729a18f0f25eb2ca400b4a4c66bf379e",
         "type": "github"
       },
       "original": {
