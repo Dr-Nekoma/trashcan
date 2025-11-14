@@ -76,12 +76,11 @@
         { pkgs, system, ... }:
         let
           # Port Fowarding (HOST -> VM)
-          # - SSH: 2222 -> 22 
+          # - SSH: 2222 -> 22
           # - EMPD: 4369
-          # - Erlang Distribution Ports: 9100-9155
-          #   Make sure to configure it with erl -kernel inet_dist_listen_min 9100 inet_dist_listen_max 9155
+          # - Erlang Distribution Ports: 9100 (good enough for local testing)
           qemu_options = {
-            net = "hostfwd=tcp:127.0.0.1:2222-:22,hostfwd=tcp:127.0.0.1:4369-:4369,hostfwd=tcp:127.0.0.1:9100-:9100,hostfwd=tcp:127.0.0.1:9101-:9101,hostfwd=tcp:127.0.0.1:9102-:9102,hostfwd=tcp:127.0.0.1:9103-:9103,hostfwd=tcp:127.0.0.1:9104-:9104,hostfwd=tcp:127.0.0.1:9105-:9105";
+            net = "hostfwd=tcp:127.0.0.1:2222-:22,hostfwd=tcp:127.0.0.1:4369-:4369,hostfwd=tcp:127.0.0.1:9100-:9100";
           };
           treefmtEval = treefmt-nix.lib.evalModule pkgs ./treefmt.nix;
         in
@@ -196,11 +195,8 @@
                     enterShell = ''
                       echo "Adding the Magalu CLI to \$PATH"
                       export PATH="$(pwd)/mg_cli:$PATH"
-                      # Some Extra QEMU envars that are useful when doing local testing
                       export QEMU_KERNEL_PARAMS="console=ttyS0"
-                      # Options to foward 
-                      #   host 2222 -> vm 22
-                      export QEMU_NET_OPTS="hostfwd=tcp:127.0.0.1:2222-:22,hostfwd=tcp:127.0.0.1:4369-:4369,hostfwd=udp:127.0.0.1:4369-:4369"
+                      export QEMU_NET_OPTS=${qemu_options.net}
                     '';
                   }
                 )

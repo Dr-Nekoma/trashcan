@@ -129,67 +129,66 @@ in
 
       # Add passswords after pg starts
       # https://discourse.nixos.org/t/assign-password-to-postgres-user-declaratively/9726/3
-      systemd.services.postgresql = {
-        # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/nixos/modules/services/databases/postgresql.nix
-        after = [
+      # https://discourse.nixos.org/t/set-password-for-a-postgresql-user-from-a-file-agenix/41377/6
+      systemd.services."postgresql-lyceum-setup" = {
+        requiredBy = [
+          "lyceum.service"
+          "pgbouncer.service"
+        ];
+        requires = [
           "network.target"
+          "postgresql.service"
+          "postgresql-setup.service"
           "run-agenix.d.mount"
         ];
-        postStart =
-          let
-            pg_lyceum_user = config.age.secrets.pg_user_lyceum.path;
-            pg_lyceum_application_user = config.age.secrets.pg_user_lyceum_application.path;
-            pg_lyceum_auth_user = config.age.secrets.pg_user_lyceum_auth.path;
-            pg_lyceum_mnesia_user = config.age.secrets.pg_user_lyceum_mnesia.path;
-            pg_migration_user = config.age.secrets.pg_user_migrations.path;
-          in
-          ''
-            # Wait for PostgreSQL to be fully ready
-            until ${postgresql_module.package}/bin/pg_isready -q; do
-              sleep 1
-            done
+        after = [
+          "network.target"
+          "postgresql.service"
+          "postgresql-setup.service"
+          "run-agenix.d.mount"
+        ];
+        path = with pkgs; [
+          coreutils
+          postgresql_module.package
+          replace-secret
+        ];
+        serviceConfig = {
+          Type = "oneshot";
+          User = "postgres";
+          Group = "postgres";
+          Restart = "on-failure";
+          RemainAfterExit = true;
+          RuntimeDirectory = "postgresql-lyceum";
+          RuntimeDirectoryMode = "700";
+        };
+        script = ''
+          # set bash options for early fail and error output         
+          set -o errexit -o pipefail -o nounset -o errtrace
+          shopt -s inherit_errexit                                                                                                                                 
 
-            ${postgresql_module.package}/bin/psql -tA <<'EOF'
-              DO $$
-              DECLARE lyceum_password TEXT;
-              DECLARE lyceum_app_password TEXT;
-              DECLARE lyceum_auth_password TEXT;
-              DECLARE lyceum_mnesia_password TEXT;
-              DECLARE migrations_password TEXT;
-              BEGIN
-                -- Read and set lyceum password
-                lyceum_password := trim(both from replace(pg_read_file('${pg_lyceum_user}'), E'\n', '''));
-                EXECUTE format('ALTER USER lyceum WITH PASSWORD %L;', lyceum_password);
+          # Wait for PostgreSQL to be fully ready
+          until ${postgresql_module.package}/bin/pg_isready -q; do
+            sleep 1
+          done
 
-                -- Read and set migrations password
-                migrations_password := trim(both from replace(pg_read_file('${pg_migration_user}'), E'\n', '''));
-                EXECUTE format('ALTER USER migrations WITH PASSWORD %L;', migrations_password);
+          # and check if the main role is there as well
+          until $(psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='lyceum'" | grep -qi 1); do
+            sleep 1
+          done
 
-                -- Application User
-                lyceum_app_password := trim(both from replace(pg_read_file('${pg_lyceum_application_user}'), E'\n', '''));
-                EXECUTE format('ALTER USER application WITH PASSWORD %L;', lyceum_app_password);
+          # Copy SQL template into temporary folder. The value of RuntimeDirectory is written into                 
+          # environment variable RUNTIME_DIRECTORY by systemd.
+          install --mode 600 ${../templates/pg-lyceum-init.tmpl.sql} ''$RUNTIME_DIRECTORY/init.sql
 
-                -- Auth User
-                lyceum_auth_password := trim(both from replace(pg_read_file('${pg_lyceum_auth_user}'), E'\n', '''));
-                EXECUTE format('ALTER USER lyceum_auth WITH PASSWORD %L;', lyceum_auth_password);
+          # fill SQL template with passwords
+          ${pkgs.replace-secret}/bin/replace-secret @PG_LYCEUM_USER@ ${config.age.secrets.pg_user_lyceum.path} ''$RUNTIME_DIRECTORY/init.sql
+          ${pkgs.replace-secret}/bin/replace-secret @PG_LYCEUM_APPLICATION_USER@ ${config.age.secrets.pg_user_lyceum_application.path} ''$RUNTIME_DIRECTORY/init.sql
+          ${pkgs.replace-secret}/bin/replace-secret @PG_LYCEUM_AUTH_USER@ ${config.age.secrets.pg_user_lyceum_auth.path} ''$RUNTIME_DIRECTORY/init.sql
+          ${pkgs.replace-secret}/bin/replace-secret @PG_MIGRATION_USER@ ${config.age.secrets.pg_user_migrations.path} ''$RUNTIME_DIRECTORY/init.sql
+          ${pkgs.replace-secret}/bin/replace-secret @PG_LYCEUM_MNESIA_USER@ ${config.age.secrets.pg_user_lyceum_mnesia.path} ''$RUNTIME_DIRECTORY/init.sql
 
-                -- MNESIA User
-                lyceum_mnesia_password := trim(both from replace(pg_read_file('${pg_lyceum_mnesia_user}'), E'\n', '''));
-                EXECUTE format('ALTER USER mnesia WITH PASSWORD %L;', lyceum_mnesia_password);
-
-                -- Grant permissions to users
-                GRANT CONNECT ON DATABASE lyceum TO migrations;
-                GRANT CREATE ON DATABASE lyceum TO migrations;
-                -- Grant default privileges for future schemas created by migrations user
-                ALTER DEFAULT PRIVILEGES FOR ROLE migrations GRANT ALL ON TABLES TO migrations;
-                ALTER DEFAULT PRIVILEGES FOR ROLE migrations GRANT ALL ON SEQUENCES TO migrations;
-
-                GRANT CONNECT ON DATABASE lyceum TO application;
-                GRANT CONNECT ON DATABASE lyceum TO lyceum_auth;
-                GRANT CONNECT ON DATABASE lyceum TO mnesia;
-              END $$;
-            EOF
-          '';
+          ${postgresql_module.package}/bin/psql --file "''$RUNTIME_DIRECTORY/init.sql"
+        '';
       };
 
       services.pgbouncer.settings = {
