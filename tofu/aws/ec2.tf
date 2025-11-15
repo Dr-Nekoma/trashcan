@@ -53,48 +53,20 @@ resource "aws_eip" "eip" {
   }
 }
 
-# This ensures that the instance is reachable via `ssh` before we deploy NixOS
-resource "null_resource" "wait" {
-  provisioner "remote-exec" {
-    connection {
-      host        = aws_eip.eip.public_ip
-      private_key = tls_private_key.ssh_key.private_key_openssh
-    }
+# NixOS Deploy
+module "nixos" {
+  source = "../nixos"
 
-    # Do nothing; we're just testing SSH connectivity
-    inline = [":"]
-  }
-}
+  debug_logs             = true
+  bootstrap_flake_system = "bootstrap_aws"
+  final_flake_system     = "nekoma_aws"
+  instance_id            = aws_instance.vm.id
+  public_ip              = aws_eip.eip.public_ip
+  private_openssh_key    = tls_private_key.ssh_key.private_key_openssh
+  public_openssh_key     = tls_private_key.ssh_key.public_key_openssh
 
-# Installs our Custom NixOS configuration
-module "system_build" {
-  source        = "github.com/nix-community/nixos-anywhere//terraform/nix-build"
-  attribute     = "${var.flake_path}#nixosConfigurations.${var.flake_system}.config.system.build.toplevel"
-  debug_logging = true
-
-  special_args = {
-    terraform_ssh_public_key = tls_private_key.ssh_key.public_key_openssh
-  }
-}
-
-module "disko_build" {
-  source        = "github.com/nix-community/nixos-anywhere//terraform/nix-build"
-  attribute     = "${var.flake_path}#nixosConfigurations.${var.flake_system}.config.system.build.diskoScript"
-  debug_logging = true
-
-  special_args = {
-    terraform_ssh_public_key = tls_private_key.ssh_key.public_key_openssh
-  }
-
-  depends_on = [module.system_build]
-}
-
-module "install" {
-  source            = "github.com/nix-community/nixos-anywhere//terraform/install"
-  nixos_system      = module.system_build.result.out
-  nixos_partitioner = module.disko_build.result.out
-  target_host       = aws_eip.eip.public_ip
-  ssh_private_key   = nonsensitive(tls_private_key.ssh_key.private_key_openssh)
-  instance_id       = aws_instance.vm.id
-  debug_logging     = true
+  depends_on = [
+    aws_eip.eip,
+    aws_instance.vm
+  ]
 }

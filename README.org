@@ -86,9 +86,11 @@ You can also add a convenient SSH config entry (on ~$HOME/.ssh/config~):
   Host nekoma_vm
     HostName 127.0.0.1
     Port 2222
+    User root 
+    IdentityFile /dev/null
     StrictHostKeyChecking no
-    User your_user
-    IdentityFile your_key
+    UserKnownHostsFile /dev/null
+    CheckHostIP no
 
   # Also useful when targeting the cloud providers
   Host nekoma_vm
@@ -102,6 +104,12 @@ Then connect with:
 
 #+begin_src shell
   ssh nekoma_vm
+#+end_src
+
+Once the VM is up, you can run:
+
+#+begin_src shell
+  just deploy-qemu
 #+end_src
 
 *** Custom ISO
@@ -170,22 +178,6 @@ Make sure that each environment has their proper access tokens configured.
   # To destroy all infrastructure
   just destroy "mgc"  # or 'dm'
 #+end_src
-
-*** Deploying with Nix
-
-Once infrastructure is provisioned, further management and updates are fully
-handled through Nix.
-
-#+begin_src shell
-  just deploy-aws
-  # or 
-  just deploy-mgc
-  # or if you want to test deploys locally as well
-  just deploy-qemu
-#+end_src
-
-This rebuilds and deploys the NixOS configuration to the target host(s),
-replacing manual provisioning or ad-hoc scripts.
 
 * Acknowledgements
 
