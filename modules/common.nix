@@ -23,6 +23,7 @@ in
   config = mkIf cfg.enable (mkMerge [
     ({
       boot = {
+        kernelPackages = pkgs.linuxPackages_latest;
         tmp.cleanOnBoot = true;
       };
 

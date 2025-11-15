@@ -2,15 +2,11 @@ terraform {
   required_providers {
     mgc = {
       source  = "magalucloud/mgc"
-      version = "~> 0.40.0"
+      version = "~> 0.40.1"
     }
     tls = {
       source  = "hashicorp/tls"
       version = "~> 4.1.0"
-    }
-    local = {
-      source  = "hashicorp/local"
-      version = "~> 2.5.3"
     }
     null = {
       source  = "hashicorp/null"
